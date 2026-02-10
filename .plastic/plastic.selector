@@ -1,0 +1,3 @@
+repository "PlataformaRunner/PlataformaRunner@4672974521574@cloud"
+  path "/"
+    smartbranch "/main/KaledCorreal"
