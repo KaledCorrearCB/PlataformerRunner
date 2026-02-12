@@ -595,7 +595,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunnerController
   forwardSpeed: 5
-  laneChangeSpeed: 100
+  laneChangeSpeed: 15
   laneDistance: 2
   gravity: -20
   jumpForce: 8

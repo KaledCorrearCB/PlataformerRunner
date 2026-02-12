@@ -35,40 +35,33 @@ public class RunnerController : MonoBehaviour
 
     void Update()
     {
-        // 1. INPUT (Detectar teclas)
+        // 1. INPUT (Se mantiene igual)
         if (Input.GetKeyDown(KeyCode.A)) MoveLane(false);
         if (Input.GetKeyDown(KeyCode.D)) MoveLane(true);
 
-        // 2. CALCULAR OBJETIVO (A dónde debería estar)
+        // 2. CÁLCULO DE POSICIÓN OBJETIVO
         float targetLateralDistance = currentLane * laneDistance;
 
-        // 3. MOVER LATERALMENTE (Calcular el delta/diferencia de este frame)
-        // Esto es lo que arregla el patinaje: Mueve "hacia" el objetivo, no "con" el objetivo.
-        float nextLateralDistance = Mathf.MoveTowards(currentLateralDistance, targetLateralDistance, laneChangeSpeed * Time.deltaTime);
-        float moveDelta = nextLateralDistance - currentLateralDistance; // Cuánto me moví solo en este frame
-        currentLateralDistance = nextLateralDistance;
+        // --- CAMBIO PARA SUAVIZAR ---
+        // Usamos Lerp para que el movimiento sea un porcentaje de la distancia restante.
+        // El valor 0.1f controla qué tan rápido llega; puedes ajustarlo.
+        float smoothedLateralDistance = Mathf.Lerp(currentLateralDistance, targetLateralDistance, laneChangeSpeed * Time.deltaTime);
+        float moveDelta = smoothedLateralDistance - currentLateralDistance;
+        currentLateralDistance = smoothedLateralDistance;
+        // ----------------------------
 
-        // 4. PREPARAR VECTORES DE MOVIMIENTO
-        Vector3 moveVector = Vector3.zero;
-
-        // A. Movimiento Hacia Adelante constante
-        moveVector += forwardDirection * forwardSpeed * Time.deltaTime;
-
-        // B. Movimiento Lateral (Solo lo que calculamos en el paso 3)
+        // 3. MOVIMIENTO FINAL
+        Vector3 moveVector = (forwardDirection * forwardSpeed * Time.deltaTime);
         moveVector += rightDirection * moveDelta;
 
-        // C. Gravedad
-        if (controller.isGrounded && verticalVelocity < 0)
-        {
-            verticalVelocity = -2f; // Mantener pegado al suelo
-        }
-        verticalVelocity += gravity * Time.deltaTime;
+        // 4. GRAVEDAD
+        if (controller.isGrounded) verticalVelocity = -2f;
+        else verticalVelocity += gravity * Time.deltaTime;
         moveVector.y = verticalVelocity * Time.deltaTime;
 
-        // 5. APLICAR MOVIMIENTO FINAL
         controller.Move(moveVector);
 
-        // 6. GESTIONAR LA ROTACIÓN DEL PERSONAJE
+        // 5. ROTACIÓN (Se mantiene igual)
         if (isRotating)
         {
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 500f * Time.deltaTime);
