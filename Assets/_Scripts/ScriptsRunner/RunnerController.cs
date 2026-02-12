@@ -1,197 +1,78 @@
 using UnityEngine;
 
-/// <summary>
-/// Controlador principal para el personaje del Endless Runner.
-/// Maneja movimiento automático, sistema de carriles y giros de 90 grados.
-/// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class RunnerController : MonoBehaviour
 {
-    #region Serialized Fields
+    [Header("Configuración General")]
+    public float forwardSpeed = 10f;
+    public float laneChangeSpeed = 30f; // Velocidad alta para efecto "Snappy"
+    public float laneDistance = 2.5f;
 
-    [Header("Movement Settings")]
-    [Tooltip("Velocidad de avance automático del personaje")]
-    [SerializeField] private float forwardSpeed = 7f;
+    [Header("Configuración Física")]
+    public float gravity = -20f;
+    public float jumpForce = 8f; // Por si quieres saltar después
 
-    [Tooltip("Velocidad de transición entre carriles")]
-    [SerializeField] private float laneChangeSpeed = 10f;
+    // Estado Privado
+    private CharacterController controller;
+    private int currentLane = 0; // 0 = Centro, -1 = Izq, 1 = Der
+    private float verticalVelocity;
 
-    [Tooltip("Velocidad de rotación al girar 90 grados")]
-    [SerializeField] private float turnSpeed = 8f;
-
-    [Header("Lane Settings")]
-    [Tooltip("Distancia entre carriles")]
-    [SerializeField] private float laneDistance = 3f;
-
-    [Header("Gravity Settings")]
-    [Tooltip("Fuerza de gravedad aplicada al personaje")]
-    [SerializeField] private float gravity = -20f;
-
-    #endregion
-
-    #region Private Fields
-
-    // Componentes
-    private CharacterController characterController;
-
-    // Sistema de Carriles
-    private enum Lane { Left = -1, Center = 0, Right = 1 }
-    private Lane currentLane = Lane.Center;
-    private Lane targetLane = Lane.Center;
-    private float targetLateralPosition = 0f;
-    private float currentLateralPosition = 0f;
-
-    // Sistema de Dirección
+    // Variables para el movimiento lateral "Snappy"
+    private float currentLateralDistance = 0f; // Donde estoy realmente (en valores de carril)
     private Vector3 forwardDirection = Vector3.forward;
     private Vector3 rightDirection = Vector3.right;
+
+    // Variables de Giro
+    private bool isInTurnTrigger = false;
     private Quaternion targetRotation;
     private bool isRotating = false;
 
-    // Control de Giros
-    private bool isInTurnTrigger = false;
-    private bool canTurn = true;
-
-    // Velocidad vertical
-    private float verticalVelocity = 0f;
-
-    #endregion
-
-    #region Unity Lifecycle
-
-    private void Awake()
+    void Start()
     {
-        characterController = GetComponent<CharacterController>();
+        controller = GetComponent<CharacterController>();
         targetRotation = transform.rotation;
     }
 
-    private void Update()
+    void Update()
     {
-        HandleInput();
-        UpdateLanePosition();
-        UpdateRotation();
-        ApplyMovement();
-    }
+        // 1. INPUT (Detectar teclas)
+        if (Input.GetKeyDown(KeyCode.A)) MoveLane(false);
+        if (Input.GetKeyDown(KeyCode.D)) MoveLane(true);
 
-    #endregion
+        // 2. CALCULAR OBJETIVO (A dónde debería estar)
+        float targetLateralDistance = currentLane * laneDistance;
 
-    #region Input Handling
+        // 3. MOVER LATERALMENTE (Calcular el delta/diferencia de este frame)
+        // Esto es lo que arregla el patinaje: Mueve "hacia" el objetivo, no "con" el objetivo.
+        float nextLateralDistance = Mathf.MoveTowards(currentLateralDistance, targetLateralDistance, laneChangeSpeed * Time.deltaTime);
+        float moveDelta = nextLateralDistance - currentLateralDistance; // Cuánto me moví solo en este frame
+        currentLateralDistance = nextLateralDistance;
 
-    /// <summary>
-    /// Procesa la entrada del jugador para cambios de carril y giros.
-    /// </summary>
-    private void HandleInput()
-    {
-        // Detectar input de cambio de carril o giro
-        bool pressedLeft = Input.GetKeyDown(KeyCode.A);
-        bool pressedRight = Input.GetKeyDown(KeyCode.D);
+        // 4. PREPARAR VECTORES DE MOVIMIENTO
+        Vector3 moveVector = Vector3.zero;
 
-        if (pressedLeft)
+        // A. Movimiento Hacia Adelante constante
+        moveVector += forwardDirection * forwardSpeed * Time.deltaTime;
+
+        // B. Movimiento Lateral (Solo lo que calculamos en el paso 3)
+        moveVector += rightDirection * moveDelta;
+
+        // C. Gravedad
+        if (controller.isGrounded && verticalVelocity < 0)
         {
-            if (isInTurnTrigger && canTurn)
-            {
-                // Girar a la izquierda (90 grados)
-                InitiateTurn(-90f);
-            }
-            else if (!isRotating)
-            {
-                // Cambiar al carril izquierdo
-                ChangeLane(-1);
-            }
+            verticalVelocity = -2f; // Mantener pegado al suelo
         }
-        else if (pressedRight)
-        {
-            if (isInTurnTrigger && canTurn)
-            {
-                // Girar a la derecha (90 grados)
-                InitiateTurn(90f);
-            }
-            else if (!isRotating)
-            {
-                // Cambiar al carril derecho
-                ChangeLane(1);
-            }
-        }
-    }
+        verticalVelocity += gravity * Time.deltaTime;
+        moveVector.y = verticalVelocity * Time.deltaTime;
 
-    #endregion
+        // 5. APLICAR MOVIMIENTO FINAL
+        controller.Move(moveVector);
 
-    #region Lane System
-
-    /// <summary>
-    /// Cambia el carril objetivo del personaje.
-    /// </summary>
-    /// <param name="direction">-1 para izquierda, 1 para derecha</param>
-    private void ChangeLane(int direction)
-    {
-        int newLane = (int)currentLane + direction;
-
-        // Limitar los carriles entre -1 (Left) y 1 (Right)
-        newLane = Mathf.Clamp(newLane, -1, 1);
-
-        if (newLane != (int)currentLane)
-        {
-            currentLane = (Lane)newLane;
-            targetLane = currentLane;
-            targetLateralPosition = (int)currentLane * laneDistance;
-        }
-    }
-
-    /// <summary>
-    /// Actualiza la posición lateral del personaje con transición suave.
-    /// </summary>
-    private void UpdateLanePosition()
-    {
-        // Interpolación suave hacia el carril objetivo
-        currentLateralPosition = Mathf.MoveTowards(
-            currentLateralPosition,
-            targetLateralPosition,
-            laneChangeSpeed * Time.deltaTime
-        );
-    }
-
-    #endregion
-
-    #region Turn System
-
-    /// <summary>
-    /// Inicia un giro de 90 grados en la dirección especificada.
-    /// </summary>
-    /// <param name="angle">Ángulo de giro (90 para derecha, -90 para izquierda)</param>
-    private void InitiateTurn(float angle)
-    {
-        // Calcular la nueva rotación objetivo
-        targetRotation = Quaternion.Euler(0, transform.eulerAngles.y + angle, 0);
-
-        // Actualizar las direcciones de movimiento según el ángulo
-        forwardDirection = targetRotation * Vector3.forward;
-        rightDirection = targetRotation * Vector3.right;
-
-        // Resetear la posición lateral al centro del nuevo camino
-        currentLateralPosition = 0f;
-        targetLateralPosition = 0f;
-        currentLane = Lane.Center;
-        targetLane = Lane.Center;
-
-        isRotating = true;
-        canTurn = false;
-    }
-
-    /// <summary>
-    /// Actualiza la rotación del personaje hacia el objetivo.
-    /// </summary>
-    private void UpdateRotation()
-    {
+        // 6. GESTIONAR LA ROTACIÓN DEL PERSONAJE
         if (isRotating)
         {
-            // Interpolar suavemente hacia la rotación objetivo
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                turnSpeed * Time.deltaTime
-            );
-
-            // Verificar si la rotación está completa
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.5f)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 500f * Time.deltaTime);
+            if (Quaternion.Angle(transform.rotation, targetRotation) < 1f)
             {
                 transform.rotation = targetRotation;
                 isRotating = false;
@@ -199,91 +80,52 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    #endregion
-
-    #region Movement
-
-    /// <summary>
-    /// Aplica el movimiento final al CharacterController.
-    /// </summary>
-    private void ApplyMovement()
+    // Función para procesar el cambio de carril o giro
+    void MoveLane(bool goingRight)
     {
-        // Aplicar gravedad
-        if (characterController.isGrounded)
+        // Si estamos en la zona de giro, ¡GIRAMOS!
+        if (isInTurnTrigger)
         {
-            verticalVelocity = -2f; // Pequeña fuerza para mantener grounded
-        }
-        else
-        {
-            verticalVelocity += gravity * Time.deltaTime;
+            TurnCorner(goingRight ? 90 : -90);
+            return;
         }
 
-        // Calcular movimiento hacia adelante
-        Vector3 forwardMovement = forwardDirection * forwardSpeed;
-
-        // Calcular movimiento lateral (relativo a la dirección actual)
-        Vector3 lateralMovement = rightDirection * currentLateralPosition;
-
-        // Combinar movimientos
-        Vector3 targetPosition = forwardMovement + lateralMovement;
-
-        // Aplicar gravedad
-        targetPosition.y = verticalVelocity;
-
-        // Mover el personaje
-        characterController.Move(targetPosition * Time.deltaTime);
+        // Si NO estamos en zona de giro, cambiamos de carril
+        if (!isRotating)
+        {
+            currentLane += (goingRight ? 1 : -1);
+            currentLane = Mathf.Clamp(currentLane, -1, 1);
+        }
     }
 
-    #endregion
+    // Lógica de Giro de 90 Grados
+    void TurnCorner(float angle)
+    {
+        if (isRotating) return;
 
-    #region Trigger Detection
+        // 1. Calcular nueva rotación
+        targetRotation *= Quaternion.Euler(0, angle, 0);
 
-    /// <summary>
-    /// Detecta cuando el personaje entra en un trigger de giro.
-    /// </summary>
+        // 2. Actualizar vectores de dirección (Vital para que 'Adelante' sea el nuevo 'Adelante')
+        forwardDirection = targetRotation * Vector3.forward;
+        rightDirection = targetRotation * Vector3.right;
+
+        // 3. Resetear carriles (Al girar, aterrizas en el centro del nuevo camino)
+        currentLane = 0;
+        currentLateralDistance = 0f;
+
+        isRotating = true;
+        isInTurnTrigger = false; // Consumimos el trigger
+    }
+
+    // Detección del Trigger
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("TurnTrigger"))
-        {
-            isInTurnTrigger = true;
-            canTurn = true;
-        }
+        if (other.CompareTag("TurnTrigger")) isInTurnTrigger = true;
     }
 
-    /// <summary>
-    /// Detecta cuando el personaje sale de un trigger de giro.
-    /// </summary>
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("TurnTrigger"))
-        {
-            isInTurnTrigger = false;
-        }
+        if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false;
     }
-
-    #endregion
-
-    #region Public Methods (Para futuras expansiones)
-
-    /// <summary>
-    /// Obtiene la velocidad actual de avance.
-    /// </summary>
-    public float GetForwardSpeed() => forwardSpeed;
-
-    /// <summary>
-    /// Modifica la velocidad de avance (útil para power-ups).
-    /// </summary>
-    public void SetForwardSpeed(float speed) => forwardSpeed = speed;
-
-    /// <summary>
-    /// Verifica si el personaje está en el suelo.
-    /// </summary>
-    public bool IsGrounded() => characterController.isGrounded;
-
-    /// <summary>
-    /// Obtiene el carril actual del personaje.
-    /// </summary>
-    public int GetCurrentLane() => (int)currentLane;
-
-    #endregion
 }
