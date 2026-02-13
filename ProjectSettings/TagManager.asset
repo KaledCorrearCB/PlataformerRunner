@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - TurnTrigger
+  - SpawnTrigger
   layers:
   - Default
   - TransparentFX
