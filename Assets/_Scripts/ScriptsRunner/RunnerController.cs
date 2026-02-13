@@ -1,87 +1,113 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
 public class RunnerController : MonoBehaviour
 {
-    [Header("Configuración General")]
-    public float forwardSpeed = 10f;
-    public float laneChangeSpeed = 20f; // Ajustado para el suavizado (Lerp)
-    public float laneDistance = 2.5f;
+    [Header("Movimiento")]
+    public float forwardSpeed = 12f;
+    public float laneDistance = 3f;
+    public float laneChangeSpeed = 15f;
 
-    [Header("Configuración Física")]
-    public float gravity = -20f;
-    public float jumpForce = 8f;
-
-    // Estado Privado
-    private CharacterController controller;
-    private int currentLane = 0; // 0 = Centro, -1 = Izq, 1 = Der
+    [Header("Física y Salto")]
+    public float gravity = -35f;
+    public float jumpForce = 12f;
+    public float fastFallSpeed = -20f;
+    public float wallJumpUpForce = 12f;
     private float verticalVelocity;
 
-    // Variables para el movimiento lateral "Snappy" y Smooth
-    private float currentLateralDistance = 0f;
-    private Vector3 forwardDirection = Vector3.forward;
-    private Vector3 rightDirection = Vector3.right;
+    [Header("Wall Run")]
+    public LayerMask wallRunLayer;
+    public float wallCheckDistance = 1.5f;
+    private bool isWallRunning = false;
+    private bool lastWallRight = false;
 
-    // Variables de Giro
-    private bool isInTurnTrigger = false;
+    [Header("Crouch")]
+    public float slideHeight = 1f;
+    private float originalHeight;
+    private Vector3 originalCenter;
+
+    private CharacterController controller;
+    private int currentLane = 0;
+
+    // El secreto: Estas variables se "limpian" en cada giro
+    private Vector3 currentForward = Vector3.forward;
+    private Vector3 currentRight = Vector3.right;
+    private Vector3 pivotPoint; // Punto de referencia para el carril
+
     private Quaternion targetRotation;
     private bool isRotating = false;
+    private bool isInTurnTrigger = false;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
         targetRotation = transform.rotation;
+        originalHeight = controller.height;
+        originalCenter = controller.center;
+        pivotPoint = transform.position; // El inicio es nuestro primer pivote
+        controller.stepOffset = 0.1f;
     }
 
     void Update()
     {
-        // 1. INPUT
+        // 1. INPUTS
         if (Input.GetKeyDown(KeyCode.A)) MoveLane(false);
         if (Input.GetKeyDown(KeyCode.D)) MoveLane(true);
 
-        // 2. CÁLCULO DE POSICIÓN OBJETIVO
-        float targetLateralDistance = currentLane * laneDistance;
+        if (Input.GetButtonDown("Jump"))
+        {
+            if (controller.isGrounded) verticalVelocity = jumpForce;
+            else if (isWallRunning) ExecuteWallJump();
+        }
 
-        // --- MOVIMIENTO SUAVIZADO (LERP) ---
-        float smoothedLateralDistance = Mathf.Lerp(currentLateralDistance, targetLateralDistance, laneChangeSpeed * Time.deltaTime);
-        float moveDelta = smoothedLateralDistance - currentLateralDistance;
-        currentLateralDistance = smoothedLateralDistance;
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
+            StartSlide();
+        }
+        if (Input.GetKeyUp(KeyCode.S)) StopSlide();
 
-        // 3. MOVIMIENTO FINAL
-        Vector3 moveVector = (forwardDirection * forwardSpeed * Time.deltaTime);
-        moveVector += rightDirection * moveDelta;
+        // 2. PARED
+        CheckWallRun();
 
-        // 4. GRAVEDAD
-        if (controller.isGrounded) verticalVelocity = -2f;
-        else verticalVelocity += gravity * Time.deltaTime;
-        moveVector.y = verticalVelocity * Time.deltaTime;
+        // 3. MOVIMIENTO LATERAL (CARRIL LIMPIO)
+        // Calculamos cuánto nos hemos alejado del PIVOTE en el eje derecho actual
+        Vector3 offsetFromPivot = transform.position - pivotPoint;
+        float currentLateralPos = Vector3.Dot(offsetFromPivot, currentRight);
+        float targetLateralPos = currentLane * laneDistance;
 
-        controller.Move(moveVector);
+        float lateralDelta = targetLateralPos - currentLateralPos;
+        Vector3 lateralMove = currentRight * (lateralDelta * laneChangeSpeed);
 
-        // 5. ROTACIÓN VISUAL
+        // 4. MOVIMIENTO ADELANTE Y FÍSICA
+        Vector3 forwardMove = currentForward * forwardSpeed;
+        ApplyPhysics();
+        Vector3 verticalMove = Vector3.up * verticalVelocity;
+
+        // 5. EJECUCIÓN
+        controller.Move((forwardMove + lateralMove + verticalMove) * Time.deltaTime);
+
+        // 6. ROTACIÓN
         if (isRotating)
         {
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 500f * Time.deltaTime);
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 1f)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 700f * Time.deltaTime);
+            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f)
             {
                 transform.rotation = targetRotation;
                 isRotating = false;
             }
         }
+
+        if (transform.position.y < -5f) Die();
     }
 
     void MoveLane(bool goingRight)
     {
-        if (isInTurnTrigger)
-        {
-            TurnCorner(goingRight ? 90 : -90);
-            return;
-        }
-
+        if (isInTurnTrigger) { TurnCorner(goingRight ? 90 : -90); return; }
         if (!isRotating)
         {
-            currentLane += (goingRight ? 1 : -1);
-            currentLane = Mathf.Clamp(currentLane, -1, 1);
+            currentLane = Mathf.Clamp(currentLane + (goingRight ? 1 : -1), -1, 1);
         }
     }
 
@@ -89,43 +115,73 @@ public class RunnerController : MonoBehaviour
     {
         if (isRotating) return;
 
-        targetRotation *= Quaternion.Euler(0, angle, 0);
-        forwardDirection = targetRotation * Vector3.forward;
-        rightDirection = targetRotation * Vector3.right;
+        // Antes de girar, actualizamos el pivote a nuestra posición actual
+        // Esto "borra" la memoria del carril anterior y evita que se devuelva
+        pivotPoint = transform.position;
 
-        currentLane = 0;
-        currentLateralDistance = 0f;
+        targetRotation *= Quaternion.Euler(0, angle, 0);
+        currentForward = targetRotation * Vector3.forward;
+        currentRight = targetRotation * Vector3.right;
 
         isRotating = true;
         isInTurnTrigger = false;
+
+        // Al girar, el carril en el que estabas se convierte en tu nuevo "centro"
+        // para que la transición sea fluida.
+        currentLane = 0;
     }
 
-    // --- DETECCIÓN DE TRIGGERS (GIRO Y GENERACIÓN) ---
-    private void OnTriggerEnter(Collider other)
+    void CheckWallRun()
     {
-        // Lógica de Giro
-        if (other.CompareTag("TurnTrigger"))
+        if (!controller.isGrounded)
         {
-            isInTurnTrigger = true;
-        }
+            bool wallLeft = Physics.Raycast(transform.position, -currentRight, wallCheckDistance, wallRunLayer);
+            bool wallRight = Physics.Raycast(transform.position, currentRight, wallCheckDistance, wallRunLayer);
 
-        // Lógica de Generación Infinita (Punto 4 solicitado)
-        // Cuando el jugador entra en un trigger de pieza nueva, el Spawner crea la siguiente.
-        if (other.CompareTag("SpawnTrigger"))
-        {
-            TileSpawner spawner = Object.FindFirstObjectByType<TileSpawner>();
-            if (spawner != null)
+            if (wallLeft || wallRight)
             {
-                spawner.SpawnTile();
+                isWallRunning = true;
+                lastWallRight = wallRight;
+                if (verticalVelocity < 0) verticalVelocity = 0;
+                return;
             }
         }
+        isWallRunning = false;
     }
 
-    private void OnTriggerExit(Collider other)
+    void ExecuteWallJump()
     {
-        if (other.CompareTag("TurnTrigger"))
+        verticalVelocity = wallJumpUpForce;
+
+        // El impulso lateral: nos cambia de carril inmediatamente
+        if (lastWallRight) currentLane = -1;
+        else currentLane = 1;
+
+        isWallRunning = false;
+    }
+
+    void ApplyPhysics()
+    {
+        if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -1f;
+        else
         {
-            isInTurnTrigger = false;
+            float currGravity = isWallRunning ? 0 : gravity;
+            verticalVelocity += currGravity * Time.deltaTime;
         }
     }
+
+    void StartSlide() { controller.height = slideHeight; controller.center = new Vector3(0, slideHeight / 2f, 0); }
+    void StopSlide() { controller.height = originalHeight; controller.center = originalCenter; }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.gameObject.CompareTag("Obstacle"))
+        {
+            if (Vector3.Dot(hit.normal, currentForward) < -0.6f) Die();
+        }
+    }
+
+    void Die() { SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
+    private void OnTriggerEnter(Collider other) { if (other.CompareTag("TurnTrigger")) isInTurnTrigger = true; }
+    private void OnTriggerExit(Collider other) { if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false; }
 }
