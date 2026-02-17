@@ -5,7 +5,7 @@ using TMPro;
 [RequireComponent(typeof(CharacterController))]
 public class RunnerController : MonoBehaviour
 {
-    [Header("Movimiento y Progresi贸n")]
+    [Header("Movimiento y Progresi髇")]
     public float initialSpeed = 12f;
     public float maxSpeed = 30f;
     public float speedIncreaseRate = 0.05f;
@@ -15,7 +15,7 @@ public class RunnerController : MonoBehaviour
     public float laneDistance = 3f;
     public float laneChangeSpeed = 15f;
 
-    [Header("F铆sica y Salto")]
+    [Header("F韘ica y Salto")]
     public float gravity = -35f;
     public float jumpForce = 12f;
     public float fastFallSpeed = -20f;
@@ -34,7 +34,7 @@ public class RunnerController : MonoBehaviour
     private float originalHeight;
     private Vector3 originalCenter;
 
-    [Header("UI y Puntuaci贸n")]
+    [Header("UI y Puntuaci髇")]
     public TextMeshProUGUI distanceText;
     private float distanceTraveled = 0f;
     private Vector3 lastPosition;
@@ -47,7 +47,6 @@ public class RunnerController : MonoBehaviour
     private bool isAmbulanceMode = false;
     private float abilityTimer = 0f;
 
-    // Variables internas de control
     private CharacterController controller;
     private int currentLane = 0;
     private Vector3 currentForward = Vector3.forward;
@@ -74,7 +73,6 @@ public class RunnerController : MonoBehaviour
 
     void Update()
     {
-        // 1. Distancia
         float frameDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
                                                new Vector3(lastPosition.x, 0, lastPosition.z));
         distanceTraveled += frameDistance;
@@ -83,11 +81,9 @@ public class RunnerController : MonoBehaviour
         if (distanceText != null)
             distanceText.text = Mathf.FloorToInt(distanceTraveled).ToString() + "m";
 
-        // 2. Velocidad
         if (currentForwardSpeed < maxSpeed)
             currentForwardSpeed += speedIncreaseRate * Time.deltaTime;
 
-        // 3. L贸gica
         HandleInputs();
         HandleAbilityTimer();
         MovePlayer();
@@ -245,10 +241,10 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    // PUNTO DE INTEGRACI脫N DE MONEDAS
+    // PUNTO DE INTEGRACI覰 DE MONEDAS
     void Die()
     {
-        // 1. Guardar monedas recolectadas en esta sesi贸n al bolsillo global
+        // 1. Guardar monedas recolectadas en esta sesi髇 al bolsillo global
         if (SessionManager.Instance != null)
         {
             SessionManager.Instance.FinalizeRun();
@@ -257,7 +253,6 @@ public class RunnerController : MonoBehaviour
         // 2. Reiniciar nivel
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-    void Die() { SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
 
     private void OnTriggerEnter(Collider other)
     {
