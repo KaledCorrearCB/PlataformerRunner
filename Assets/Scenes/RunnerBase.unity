@@ -5149,8 +5149,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoinUIHandler
   sessionText: {fileID: 883108991}
-  uiContainer: {fileID: 977884197}
+  coinCanvasGroup: {fileID: 977884199}
   displayDuration: 3
+  fadeSpeed: 3
 --- !u!1001 &1022965014
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5406,8 +5407,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoinUIHandler
   sessionText: {fileID: 883108991}
-  uiContainer: {fileID: 0}
+  coinCanvasGroup: {fileID: 0}
   displayDuration: 3
+  fadeSpeed: 3
 --- !u!43 &1134253890
 Mesh:
   m_ObjectHideFlags: 0

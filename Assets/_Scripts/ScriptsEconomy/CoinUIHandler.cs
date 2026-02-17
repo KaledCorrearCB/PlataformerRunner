@@ -1,41 +1,63 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class CoinUIHandler : MonoBehaviour
 {
+    [Header("Referencias")]
     public TextMeshProUGUI sessionText;
-    public GameObject uiContainer; // El CoinGroup
+    public CanvasGroup coinCanvasGroup;
+
+    [Header("Configuración")]
     public float displayDuration = 3f;
-    private float timer;
+    public float fadeSpeed = 3f;
+
+    private Coroutine currentRoutine;
 
     void Start()
     {
-        if (uiContainer != null) uiContainer.SetActive(false);
-    }
-
-    void Update()
-    {
-        if (timer > 0)
+        // Fuerza la transparencia a 0 al iniciar, sin desactivar el objeto
+        if (coinCanvasGroup != null)
         {
-            timer -= Time.deltaTime;
-            if (timer <= 0)
-            {
-                if (uiContainer != null) uiContainer.SetActive(false);
-            }
+            coinCanvasGroup.alpha = 0f;
         }
     }
 
     public void UpdateSessionUI()
     {
+        // Actualiza el texto
         if (SessionManager.Instance != null && sessionText != null)
         {
             sessionText.text = SessionManager.Instance.coinsCollectedThisRun.ToString() + "c";
         }
 
-        if (uiContainer != null)
+        // Ejecuta la animación de desvanecimiento
+        if (coinCanvasGroup != null)
         {
-            uiContainer.SetActive(true);
-            timer = displayDuration;
+            if (currentRoutine != null) StopCoroutine(currentRoutine);
+            currentRoutine = StartCoroutine(FadeInOutRoutine());
         }
+    }
+
+    private IEnumerator FadeInOutRoutine()
+    {
+        // 1. Aparecer (Fade In)
+        while (coinCanvasGroup.alpha < 1f)
+        {
+            coinCanvasGroup.alpha += Time.deltaTime * (fadeSpeed * 2);
+            yield return null;
+        }
+        coinCanvasGroup.alpha = 1f;
+
+        // 2. Mantener en pantalla (3 segundos)
+        yield return new WaitForSeconds(displayDuration);
+
+        // 3. Desaparecer suave (Fade Out)
+        while (coinCanvasGroup.alpha > 0f)
+        {
+            coinCanvasGroup.alpha -= Time.deltaTime * fadeSpeed;
+            yield return null;
+        }
+        coinCanvasGroup.alpha = 0f;
     }
 }

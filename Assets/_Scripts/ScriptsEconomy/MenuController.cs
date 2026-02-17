@@ -3,9 +3,14 @@ using UnityEngine.SceneManagement;
 
 public class MenuController : MonoBehaviour
 {
-    public void StartGame()
+    // Usamos el nombre exacto de tu archivo: LevelSelector
+    public void OpenLevelSelector()
     {
-        // Carga la escena del Runner (que es la número 1 en el Build Profile)
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene("LevelSelector");
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 }
