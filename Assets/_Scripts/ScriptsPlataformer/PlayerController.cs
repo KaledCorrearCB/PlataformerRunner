@@ -39,6 +39,15 @@ public class PlayerController : MonoBehaviour
     public Transform model;
     public float rotationSpeed = 10f;
 
+    // Controladores para animaciones
+
+    [HideInInspector] public bool stopMoving;
+
+    //LevelSelector
+
+    public LSEntry currentLevelNode;
+
+
     public void Awake()
     {
       playerInput = GetComponent<PlayerInput>();
@@ -115,6 +124,15 @@ public class PlayerController : MonoBehaviour
     {
         Jump();
 
+    }
+
+    public void OnSelect()
+    {
+        if (currentLevelNode != null)
+        {
+            currentLevelNode.LoadLevel();
+        }
+        Debug.Log("SELECT WORKING");
     }
 
     // Update is called once per frame
