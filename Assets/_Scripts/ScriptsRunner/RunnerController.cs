@@ -5,7 +5,7 @@ using TMPro;
 [RequireComponent(typeof(CharacterController))]
 public class RunnerController : MonoBehaviour
 {
-    [Header("Movimiento y Progresi髇")]
+    [Header("Movimiento y Progresi贸n")]
     public float initialSpeed = 12f;
     public float maxSpeed = 30f;
     public float speedIncreaseRate = 0.05f;
@@ -15,7 +15,7 @@ public class RunnerController : MonoBehaviour
     public float laneDistance = 3f;
     public float laneChangeSpeed = 15f;
 
-    [Header("F韘ica y Salto")]
+    [Header("F铆sica y Salto")]
     public float gravity = -35f;
     public float jumpForce = 12f;
     public float fastFallSpeed = -20f;
@@ -34,7 +34,7 @@ public class RunnerController : MonoBehaviour
     private float originalHeight;
     private Vector3 originalCenter;
 
-    [Header("UI y Puntuaci髇")]
+    [Header("UI y Puntuaci贸n")]
     public TextMeshProUGUI distanceText;
     private float distanceTraveled = 0f;
     private Vector3 lastPosition;
@@ -53,7 +53,6 @@ public class RunnerController : MonoBehaviour
     private Vector3 currentForward = Vector3.forward;
     private Vector3 currentRight = Vector3.right;
     private Vector3 pivotPoint;
-
     private Quaternion targetRotation;
     private bool isRotating = false;
     private bool isInTurnTrigger = false;
@@ -88,7 +87,7 @@ public class RunnerController : MonoBehaviour
         if (currentForwardSpeed < maxSpeed)
             currentForwardSpeed += speedIncreaseRate * Time.deltaTime;
 
-        // 3. L骻ica
+        // 3. L贸gica
         HandleInputs();
         HandleAbilityTimer();
         MovePlayer();
@@ -153,7 +152,6 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    #region L骻ica de Habilidad
     void HandleAbilityTimer()
     {
         if (isAmbulanceMode)
@@ -172,7 +170,6 @@ public class RunnerController : MonoBehaviour
         if (activate) abilityTimer = abilityDuration;
         else StopSlide();
     }
-    #endregion
 
     void MoveLane(bool goingRight)
     {
@@ -248,6 +245,18 @@ public class RunnerController : MonoBehaviour
         }
     }
 
+    // PUNTO DE INTEGRACI脫N DE MONEDAS
+    void Die()
+    {
+        // 1. Guardar monedas recolectadas en esta sesi贸n al bolsillo global
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.FinalizeRun();
+        }
+
+        // 2. Reiniciar nivel
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
     void Die() { SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
 
     private void OnTriggerEnter(Collider other)
