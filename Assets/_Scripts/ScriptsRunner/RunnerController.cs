@@ -5,8 +5,6 @@ using TMPro;
 [RequireComponent(typeof(CharacterController))]
 public class RunnerController : MonoBehaviour
 {
-    // ... (Mantén todas tus variables anteriores de Movimiento, Carriles, Física, Wall Run, Crouch y UI) ...
-
     [Header("Movimiento y Progresión")]
     public float initialSpeed = 12f;
     public float maxSpeed = 30f;
@@ -41,23 +39,19 @@ public class RunnerController : MonoBehaviour
     private float distanceTraveled = 0f;
     private Vector3 lastPosition;
 
-    #region Habilidad Ambulancia (MODIFICADO: MODO ESCUDO)
-    [Header("Habilidad Ambulancia")]
+    [Header("Habilidad Ambulancia (Escudo)")]
     public MeshRenderer capsuleRenderer;
     public GameObject ambulanceModel;
     public float abilityDuration = 7f;
     public float ambulanceSpeedBoost = 5f;
-
     private bool isAmbulanceMode = false;
     private float abilityTimer = 0f;
-    #endregion
 
     private CharacterController controller;
     private int currentLane = 0;
     private Vector3 currentForward = Vector3.forward;
     private Vector3 currentRight = Vector3.right;
     private Vector3 pivotPoint;
-
     private Quaternion targetRotation;
     private bool isRotating = false;
     private bool isInTurnTrigger = false;
@@ -110,10 +104,8 @@ public class RunnerController : MonoBehaviour
                 ExecuteWallJump();
         }
 
-        // --- CAMBIO: Restricción de agachado ---
         if (Input.GetKeyDown(KeyCode.S))
         {
-            // El jugador solo puede agacharse si NO es ambulancia
             if (!isAmbulanceMode)
             {
                 if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
@@ -121,7 +113,6 @@ public class RunnerController : MonoBehaviour
             }
             else
             {
-                // Si es ambulancia, solo permitimos la caída rápida pero NO el cambio de altura (slide)
                 if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
             }
         }
@@ -157,46 +148,30 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    #region Lógica de Habilidad
     void HandleAbilityTimer()
     {
         if (isAmbulanceMode)
         {
             abilityTimer -= Time.deltaTime;
-            if (abilityTimer <= 0)
-            {
-                ToggleAmbulanceMode(false);
-            }
+            if (abilityTimer <= 0) ToggleAmbulanceMode(false);
         }
     }
 
     public void ToggleAmbulanceMode(bool activate)
     {
         isAmbulanceMode = activate;
-
         if (capsuleRenderer != null) capsuleRenderer.enabled = !activate;
         if (ambulanceModel != null) ambulanceModel.SetActive(activate);
 
-        if (activate)
-        {
-            abilityTimer = abilityDuration;
-        }
-        else
-        {
-            // Aseguramos que al desactivarse el modo, el collider recupere su altura normal por si acaso
-            StopSlide();
-        }
+        if (activate) abilityTimer = abilityDuration;
+        else StopSlide();
     }
-    #endregion
 
-    // ... (Mantén MoveLane, TurnCorner, CheckWallRun, ExecuteWallJump, ApplyPhysics, StartSlide, StopSlide igual) ...
     void MoveLane(bool goingRight)
     {
         if (isInTurnTrigger) { TurnCorner(goingRight ? 90 : -90); return; }
         if (!isRotating)
-        {
             currentLane = Mathf.Clamp(currentLane + (goingRight ? 1 : -1), -1, 1);
-        }
     }
 
     void TurnCorner(float angle)
@@ -239,10 +214,7 @@ public class RunnerController : MonoBehaviour
 
     void ApplyPhysics()
     {
-        if (controller.isGrounded && verticalVelocity < 0)
-        {
-            verticalVelocity = -1f;
-        }
+        if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -1f;
         else
         {
             float currGravity = isWallRunning ? 0 : gravity;
@@ -253,36 +225,32 @@ public class RunnerController : MonoBehaviour
     void StartSlide() { controller.height = slideHeight; controller.center = new Vector3(0, slideHeight / 2f, 0); }
     void StopSlide() { controller.height = originalHeight; controller.center = originalCenter; }
 
-    // --- CAMBIO: Lógica de Colisión con Escudo ---
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (hit.gameObject.CompareTag("Obstacle"))
         {
-            // Verificamos si es un choque frontal
             if (Vector3.Dot(hit.normal, currentForward) < -0.6f)
             {
                 if (isAmbulanceMode)
                 {
-                    // La ambulancia actúa como escudo: 
-                    // Se desactiva el modo pero el jugador NO muere.
                     ToggleAmbulanceMode(false);
-
-                    // Opcional: Destruir el obstáculo para que no vuelva a chocar 
-                    // inmediatamente con la cápsula.
                     Destroy(hit.gameObject);
-
-                    Debug.Log("¡Escudo roto! Ambulancia desactivada.");
                 }
-                else
-                {
-                    Die();
-                }
+                else Die();
             }
         }
     }
 
+    // PUNTO DE INTEGRACIÓN DE MONEDAS
     void Die()
     {
+        // 1. Guardar monedas recolectadas en esta sesión al bolsillo global
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.FinalizeRun();
+        }
+
+        // 2. Reiniciar nivel
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
@@ -297,8 +265,5 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false;
-    }
+    private void OnTriggerExit(Collider other) { if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false; }
 }
