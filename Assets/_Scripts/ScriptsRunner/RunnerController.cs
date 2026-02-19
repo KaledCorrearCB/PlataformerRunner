@@ -47,6 +47,11 @@ public class RunnerController : MonoBehaviour
     private bool isAmbulanceMode = false;
     private float abilityTimer = 0f;
 
+    [Header("Configuración Tobogán")]
+    public float slideSpeedMultiplier = 1.5f;
+    public GameObject waterSplashVFX;
+    private bool isSlidingOnWater = false;
+
     private CharacterController controller;
     private int currentLane = 0;
     private Vector3 currentForward = Vector3.forward;
@@ -69,6 +74,7 @@ public class RunnerController : MonoBehaviour
         controller.stepOffset = 0.1f;
 
         if (ambulanceModel != null) ambulanceModel.SetActive(false);
+        if (waterSplashVFX != null) waterSplashVFX.SetActive(false);
     }
 
     void Update()
@@ -128,7 +134,10 @@ public class RunnerController : MonoBehaviour
         float lateralDelta = targetLateralPos - currentLateralPos;
         Vector3 lateralMoveVector = currentRight * (lateralDelta * laneChangeSpeed);
 
-        float actualSpeed = isAmbulanceMode ? currentForwardSpeed + ambulanceSpeedBoost : currentForwardSpeed;
+        float actualSpeed = currentForwardSpeed;
+        if (isAmbulanceMode) actualSpeed += ambulanceSpeedBoost;
+        if (isSlidingOnWater) actualSpeed *= slideSpeedMultiplier;
+
         Vector3 forwardMoveVector = currentForward * actualSpeed;
 
         CheckWallRun();
@@ -241,16 +250,9 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    // PUNTO DE INTEGRACIÓN DE MONEDAS
     void Die()
     {
-        // 1. Guardar monedas recolectadas en esta sesión al bolsillo global
-        if (SessionManager.Instance != null)
-        {
-            SessionManager.Instance.FinalizeRun();
-        }
-
-        // 2. Reiniciar nivel
+        if (SessionManager.Instance != null) SessionManager.Instance.FinalizeRun();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
@@ -258,12 +260,47 @@ public class RunnerController : MonoBehaviour
     {
         if (other.CompareTag("TurnTrigger")) isInTurnTrigger = true;
 
+        // RECOGER POWERUP: Solo si es el cuerpo del jugador (no el sensor largo)
+        // Usamos Vector3.Distance para asegurar que el jugador esté cerca y no sea el sensor
         if (other.CompareTag("PowerUp"))
         {
-            ToggleAmbulanceMode(true);
-            Destroy(other.gameObject);
+            float dist = Vector3.Distance(transform.position, other.transform.position);
+            if (dist < 3f)
+            {
+                ToggleAmbulanceMode(true);
+                Destroy(other.gameObject);
+            }
+        }
+
+        if (other.CompareTag("WaterSlide"))
+        {
+            isSlidingOnWater = true;
+            if (waterSplashVFX != null) waterSplashVFX.SetActive(true);
         }
     }
 
-    private void OnTriggerExit(Collider other) { if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false; }
+    // DETECCIÓN DEL SENSOR PARA EL FUEGO (CON FILTROS)
+    private void OnTriggerStay(Collider other)
+    {
+        // FILTRO DOBLE: Tag "FireWall" Y Layer "Fire"
+        if (isSlidingOnWater && other.CompareTag("FireWall") && other.gameObject.layer == LayerMask.NameToLayer("Fire"))
+        {
+            FireBehavior fire = other.GetComponent<FireBehavior>();
+            if (fire != null)
+            {
+                fire.StartExtinguishing();
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false;
+
+        if (other.CompareTag("WaterSlide"))
+        {
+            isSlidingOnWater = false;
+            if (waterSplashVFX != null) waterSplashVFX.SetActive(false);
+        }
+    }
 }
