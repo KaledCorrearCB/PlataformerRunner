@@ -1,8 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
+    //hacerlo singletone
+    public static PlayerController instance;
+
     [Header("Configuración de Movimiento")]
     public float moveSpeed = 5f;
     public float rotationSpeed = 10f;
@@ -32,6 +36,18 @@ public class PlayerController : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
+        
+        if(instance != null)
+        {
+            return;
+        }
+
+        else
+        {
+            instance = this;
+        }
+            
+
     }
 
     void Update()
@@ -116,4 +132,5 @@ public class PlayerController : MonoBehaviour
             interactUI.SetActive(currentLevelNode != null);
         }
     }
+
 }
