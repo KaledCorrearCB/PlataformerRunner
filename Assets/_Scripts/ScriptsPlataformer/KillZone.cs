@@ -1,16 +1,30 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class KillZone : MonoBehaviour
 {
+    private Transform player;
+
+    public void SetPlayer(Transform playerTransform)
+    {
+        player = playerTransform;
+    }
+
+    private void LateUpdate()
+    {
+        if (player == null) return;
+
+        transform.position = new Vector3(
+            player.position.x,
+            transform.position.y,
+            player.position.z
+        );
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        if ( other.tag == "Player")
+        if (other.CompareTag("Player"))
         {
-            //other.gameObject.GetComponent<CharacterController>().Move(Vector3.up - other.transform.position);
             LevelManager.instance.Respawn();
         }
     }
-
 }

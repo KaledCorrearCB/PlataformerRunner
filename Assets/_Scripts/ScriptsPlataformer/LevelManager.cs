@@ -4,12 +4,16 @@ using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour
 {
+    //Aqui hacemos que se vuelva un singletone
     public static LevelManager instance;
     public float waitBeforeRespawning;
+
     [HideInInspector]public bool respawning;
     private PlayerController player;
     public Vector3 respawnPoint;
     public float waitBeforeSceneLoad;
+    private KillZone killZone;
+
 
     private CameraController cam;
 
@@ -21,9 +25,20 @@ public class LevelManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // Traemos la informacion del objeto player
         player = FindFirstObjectByType<PlayerController>();  
+        //traemos la posicion del respawn point
         respawnPoint = player.transform.position + Vector3.up;
+        // Traemos la informaicon de la camara
         cam = FindFirstObjectByType<CameraController>();
+
+        //traemos la informacion de la killzone
+        killZone = FindFirstObjectByType<KillZone>();
+
+        if (killZone != null)
+        {
+            killZone.SetPlayer(player.transform);
+        }
     }
 
     // Update is called once per frame
