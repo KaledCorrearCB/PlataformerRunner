@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class LevelManager : MonoBehaviour
     [HideInInspector]public bool respawning;
     private PlayerController player;
     public Vector3 respawnPoint;
+    public float waitBeforeSceneLoad;
 
     private CameraController cam;
 
@@ -54,5 +56,27 @@ public class LevelManager : MonoBehaviour
         player.gameObject.SetActive(true);
         UIController.instance.FadeFromBlack();
         respawning = false;
+    }
+
+    public void CompleteLevel(string sceneToLoad)
+    {
+        StartCoroutine(CompleteLevelCo(sceneToLoad));
+    }
+
+    private IEnumerator CompleteLevelCo(string sceneToLoad)
+    {
+        respawning = true;
+
+        player.gameObject.SetActive(false);
+
+        UIController.instance.FadeToBlack();
+
+        // Esperar hasta que el alpha sea 1
+        while (UIController.instance.fadeScreem.color.a < 0.95f)
+        {
+            yield return null;
+        }
+
+        SceneManager.LoadScene(sceneToLoad);
     }
 }
