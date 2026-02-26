@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector] public bool stopMoving;
     [HideInInspector] public LSEntry currentLevelNode;
-
+    [HideInInspector] public FlowerPot currentFlowerPot;
     public void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
@@ -108,10 +108,33 @@ public class PlayerController : MonoBehaviour
     // Se ejecuta automáticamente por el InputSystem al presionar el botón de "Select" (E)
     public void OnSelect()
     {
+        Debug.Log("Select pressed");
         if (currentLevelNode != null && !stopMoving)
         {
             Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
             currentLevelNode.LoadLevel();
+            return;
+        }
+
+        
+    }
+
+    public void OnSelectHold(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            if (currentFlowerPot != null)
+            {
+                currentFlowerPot.StartWatering();
+            }
+        }
+
+        if (context.canceled)
+        {
+            if (currentFlowerPot != null)
+            {
+                currentFlowerPot.StopWatering();
+            }
         }
     }
 
