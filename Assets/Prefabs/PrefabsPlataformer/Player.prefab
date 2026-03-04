@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1024036720382140956}
   - component: {fileID: 1158779152941074834}
   - component: {fileID: 3046454120394312976}
+  - component: {fileID: 7244426206401741673}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -244,6 +245,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a16cdfccb5dc3674dbdd11a8c6e48974, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlatformPlayer
+--- !u!114 &7244426206401741673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4824565705795560864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e24777b3e9da5a14c8c071c58d8b6b08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWater
+  currentWater: 0
+  maxWater: 100
+  waterPickupSpeed: 50
+  waterBar: {fileID: 0}
+  waterBarFill: {fileID: 0}
+  waterSourceLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1001 &2596956583677660174
 PrefabInstance:
   m_ObjectHideFlags: 0

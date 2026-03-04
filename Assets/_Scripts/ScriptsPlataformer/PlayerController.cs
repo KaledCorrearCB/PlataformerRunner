@@ -7,6 +7,9 @@ public class PlayerController : MonoBehaviour
     //hacerlo singletone
     public static PlayerController instance;
 
+    [Header("Sistemas del Jugador")]
+    public PlayerWater playerWater;
+
     [Header("Configuración de Movimiento")]
     public float moveSpeed = 5f;
     public float rotationSpeed = 10f;
@@ -31,6 +34,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public bool stopMoving;
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
+    [HideInInspector] public WaterSource currentWaterSource;
     public void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
@@ -46,7 +50,8 @@ public class PlayerController : MonoBehaviour
         {
             instance = this;
         }
-            
+        if (playerWater == null)
+            playerWater = GetComponent<PlayerWater>();
 
     }
 
@@ -121,19 +126,37 @@ public class PlayerController : MonoBehaviour
 
     public void OnSelectHold(InputAction.CallbackContext context)
     {
-        if (context.started)
+        if (context.started) // Cuando empieza a presionar E
         {
+            // Prioridad: 1. Regar maceta, 2. Absorber agua
             if (currentFlowerPot != null)
             {
                 currentFlowerPot.StartWatering();
             }
+            else if (currentWaterSource != null)
+            {
+                // Activar efectos visuales de la fuente (si los tiene)
+                currentWaterSource.StartAbsorbing(this);
+
+                // ¡ACTIVAR LA ABSORCIÓN DE AGUA DEL JUGADOR!
+                if (playerWater != null)
+                    playerWater.StartAbsorbingWater(currentWaterSource.gameObject);
+            }
         }
 
-        if (context.canceled)
+        if (context.canceled) // Cuando suelta E
         {
             if (currentFlowerPot != null)
             {
                 currentFlowerPot.StopWatering();
+            }
+            else if (currentWaterSource != null)
+            {
+                currentWaterSource.StopAbsorbing(this);
+
+                // ¡DETENER LA ABSORCIÓN DE AGUA!
+                if (playerWater != null)
+                    playerWater.StopAbsorbingWater();
             }
         }
     }
@@ -151,8 +174,26 @@ public class PlayerController : MonoBehaviour
     {
         if (interactUI != null)
         {
-            // Solo se activa si el jugador está sobre un portal (currentLevelNode no es nulo)
-            interactUI.SetActive(currentLevelNode != null);
+            // Prioridad visual: portal > maceta > fuente de agua
+            if (currentLevelNode != null)
+            {
+                interactUI.SetActive(true);
+                // Si tienes un texto, cámbialo a "Entrar al portal"
+            }
+            else if (currentFlowerPot != null)
+            {
+                interactUI.SetActive(true);
+                // Cambiar texto a "Regar planta (Mantener E)"
+            }
+            else if (currentWaterSource != null)
+            {
+                interactUI.SetActive(true);
+                // Cambiar texto a "Absorber agua (Mantener E)"
+            }
+            else
+            {
+                interactUI.SetActive(false);
+            }
         }
     }
 
