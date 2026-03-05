@@ -1,16 +1,21 @@
+Ôªø// PlayerController.cs  ‚Üê REEMPLAZA tu versi√≥n actual
+// Cambios respecto al original (marcados con // *** NUEVO ***):
+//   1. Se agrega la variable p√∫blica currentCharacterInNeed
+//   2. OnSelect() ahora tambi√©n llama a TryDeliverKit() si hay un personaje cerca
+//   3. HandleInteractionUI() muestra el interactUI cuando hay un personaje cerca
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
-    //hacerlo singletone
     public static PlayerController instance;
 
     [Header("Sistemas del Jugador")]
     public PlayerWater playerWater;
 
-    [Header("ConfiguraciÛn de Movimiento")]
+    [Header("Configuraci√≥n de Movimiento")]
     public float moveSpeed = 5f;
     public float rotationSpeed = 10f;
     public float jumpForce = 7f;
@@ -18,14 +23,14 @@ public class PlayerController : MonoBehaviour
 
     [Header("Referencias de Escena")]
     public Transform model;
-    public GameObject interactUI; // Arrastra aquÌ tu texto de "Presiona E"
+    public GameObject interactUI;
 
     // Componentes internos
     private CharacterController CharCon;
     private PlayerInput playerInput;
     private CameraController cam;
 
-    // Variables de estado y fÌsica
+    // Variables de estado y f√≠sica
     private Vector2 inputM;
     private Vector3 inputVector;
     private Vector3 movementVector;
@@ -35,29 +40,29 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
+    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // *** NUEVO ***
+
     public void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
-        
-        if(instance != null)
+
+        if (instance != null)
         {
             return;
         }
-
         else
         {
             instance = this;
         }
+
         if (playerWater == null)
             playerWater = GetComponent<PlayerWater>();
-
     }
 
     void Update()
     {
-        // Si el nivel est· cargando, bloqueamos todo el control
         if (stopMoving)
         {
             if (interactUI != null) interactUI.SetActive(false);
@@ -74,7 +79,6 @@ public class PlayerController : MonoBehaviour
     {
         inputM = playerInput.actions["Move"].ReadValue<Vector2>();
 
-        // Direcciones de la c·mara
         Vector3 camForward = cam.transform.forward;
         Vector3 camRight = cam.transform.right;
         camForward.y = 0;
@@ -82,10 +86,8 @@ public class PlayerController : MonoBehaviour
         camForward.Normalize();
         camRight.Normalize();
 
-        // C·lculo de movimiento
         inputVector = camRight * inputM.x + camForward * inputM.y;
 
-        // Gravedad constante
         if (CharCon.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
@@ -110,10 +112,11 @@ public class PlayerController : MonoBehaviour
         CharCon.Move(movementVector * Time.deltaTime);
     }
 
-    // Se ejecuta autom·ticamente por el InputSystem al presionar el botÛn de "Select" (E)
     public void OnSelect()
     {
         Debug.Log("Select pressed");
+
+        // Prioridad 1: cargar nivel (igual que antes)
         if (currentLevelNode != null && !stopMoving)
         {
             Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
@@ -121,30 +124,31 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        
+        // *** NUEVO ‚Äî Prioridad 2: entregar kit a personaje ***
+        if (currentCharacterInNeed != null)
+        {
+            currentCharacterInNeed.TryDeliverKit();
+            return;
+        }
     }
 
     public void OnSelectHold(InputAction.CallbackContext context)
     {
-        if (context.started) // Cuando empieza a presionar E
+        if (context.started)
         {
-            // Prioridad: 1. Regar maceta, 2. Absorber agua
             if (currentFlowerPot != null)
             {
                 currentFlowerPot.StartWatering();
             }
             else if (currentWaterSource != null)
             {
-                // Activar efectos visuales de la fuente (si los tiene)
                 currentWaterSource.StartAbsorbing(this);
-
-                // °ACTIVAR LA ABSORCI”N DE AGUA DEL JUGADOR!
                 if (playerWater != null)
                     playerWater.StartAbsorbingWater(currentWaterSource.gameObject);
             }
         }
 
-        if (context.canceled) // Cuando suelta E
+        if (context.canceled)
         {
             if (currentFlowerPot != null)
             {
@@ -153,8 +157,6 @@ public class PlayerController : MonoBehaviour
             else if (currentWaterSource != null)
             {
                 currentWaterSource.StopAbsorbing(this);
-
-                // °DETENER LA ABSORCI”N DE AGUA!
                 if (playerWater != null)
                     playerWater.StopAbsorbingWater();
             }
@@ -169,26 +171,26 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Controla si el cartel de "Presiona E" se ve o no
     private void HandleInteractionUI()
     {
         if (interactUI != null)
         {
-            // Prioridad visual: portal > maceta > fuente de agua
+            // *** NUEVO ‚Äî currentCharacterInNeed agregado a la prioridad visual ***
             if (currentLevelNode != null)
             {
                 interactUI.SetActive(true);
-                // Si tienes un texto, c·mbialo a "Entrar al portal"
+            }
+            else if (currentCharacterInNeed != null)  // *** NUEVO ***
+            {
+                interactUI.SetActive(true);
             }
             else if (currentFlowerPot != null)
             {
                 interactUI.SetActive(true);
-                // Cambiar texto a "Regar planta (Mantener E)"
             }
             else if (currentWaterSource != null)
             {
                 interactUI.SetActive(true);
-                // Cambiar texto a "Absorber agua (Mantener E)"
             }
             else
             {
@@ -196,5 +198,4 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-
 }
