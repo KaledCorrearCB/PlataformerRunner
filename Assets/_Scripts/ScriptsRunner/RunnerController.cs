@@ -79,6 +79,8 @@ public class RunnerController : MonoBehaviour
 
     void Update()
     {
+
+
         float frameDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
                                                new Vector3(lastPosition.x, 0, lastPosition.z));
         distanceTraveled += frameDistance;
@@ -89,6 +91,9 @@ public class RunnerController : MonoBehaviour
 
         if (currentForwardSpeed < maxSpeed)
             currentForwardSpeed += speedIncreaseRate * Time.deltaTime;
+
+        if (SessionManager.Instance != null)
+            SessionManager.Instance.SetDistance(distanceTraveled);
 
         HandleInputs();
         HandleAbilityTimer();

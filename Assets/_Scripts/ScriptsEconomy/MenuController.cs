@@ -13,4 +13,9 @@ public class MenuController : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void OpenRecordMenu()
+    {
+        SceneManager.LoadScene("RecordMenu");
+    }
 }

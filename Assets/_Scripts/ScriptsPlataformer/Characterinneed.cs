@@ -1,6 +1,6 @@
-﻿// CharacterInNeed.cs  ← REEMPLAZA tu versión anterior
-// Ahora se integra al sistema de PlayerController igual que FlowerPot y WaterSource.
-// Ya NO usa Input.GetKeyDown — la tecla E la maneja PlayerController.OnSelect().
+﻿// CharacterInNeed.cs
+// Versión actualizada — agrega IsAlreadyHelped() para que CharacterDetector
+// pueda filtrar personajes ya rescatados sin acceder al campo privado.
 //
 // SETUP EN UNITY:
 //   1. Selecciona el Empty "Personaje 1" (o 2 o 3).
@@ -19,15 +19,16 @@ public class CharacterInNeed : MonoBehaviour
 
     private bool _alreadyHelped = false;
 
+    // *** NUEVO — getter público para CharacterDetector ***
+    /// <summary>Devuelve true si este personaje ya fue ayudado y no debe detectarse.</summary>
+    public bool IsAlreadyHelped() => _alreadyHelped;
+
     private void OnTriggerEnter(Collider other)
     {
         if (_alreadyHelped) return;
         if (!other.CompareTag("Player")) return;
 
-        // Le avisamos al PlayerController que hay un personaje cerca,
-        // igual que hace currentFlowerPot o currentWaterSource
         PlayerController.instance.currentCharacterInNeed = this;
-
         Debug.Log($"[{characterName}] Jugador cerca. Necesita: {requiredKit}. Presiona E.");
     }
 
@@ -35,7 +36,6 @@ public class CharacterInNeed : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        // Limpiamos la referencia al salir
         if (PlayerController.instance.currentCharacterInNeed == this)
             PlayerController.instance.currentCharacterInNeed = null;
     }
@@ -54,24 +54,20 @@ public class CharacterInNeed : MonoBehaviour
         }
 
         bool success = KitInventory.Instance.SpendKit(requiredKit);
-
         if (success)
         {
             _alreadyHelped = true;
 
-            // Limpiar referencia en el PlayerController
             if (PlayerController.instance.currentCharacterInNeed == this)
                 PlayerController.instance.currentCharacterInNeed = null;
 
-            // Registrar en la base de datos
             HelpedCharactersData.RegisterHelped(requiredKit);
-
             Debug.Log($"[{characterName}] ¡Ayudado con {requiredKit}! " +
                       $"Total ayudados: {HelpedCharactersData.GetTotalHelped()}");
 
             // Opcional — descomenta la que prefieras:
-            // gameObject.SetActive(false);                            // Desaparece todo
-            // transform.GetChild(0).gameObject.SetActive(false);     // Solo desaparece el cilindro
+            // gameObject.SetActive(false);
+            // transform.GetChild(0).gameObject.SetActive(false);
         }
         else
         {
