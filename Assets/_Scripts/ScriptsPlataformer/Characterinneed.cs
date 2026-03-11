@@ -62,6 +62,7 @@ public class CharacterInNeed : MonoBehaviour
                 PlayerController.instance.currentCharacterInNeed = null;
 
             HelpedCharactersData.RegisterHelped(requiredKit);
+            SessionManager.Instance?.RegisterHelped(requiredKit);
             Debug.Log($"[{characterName}] ¡Ayudado con {requiredKit}! " +
                       $"Total ayudados: {HelpedCharactersData.GetTotalHelped()}");
 
