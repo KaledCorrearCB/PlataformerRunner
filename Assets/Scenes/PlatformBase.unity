@@ -3889,7 +3889,7 @@ PrefabInstance:
     - target: {fileID: 3076769571192683895, guid: 56e5cd89857b6cd4fbe09043f3bef2c3, type: 3}
       propertyPath: arrowPrefab
       value: 
-      objectReference: {fileID: 919132149155446097, guid: 7815c66a6c12287458d2cb7436218d52, type: 3}
+      objectReference: {fileID: 919132149155446097, guid: a4b736e8b25bdb040a23f30c67c0464d, type: 3}
     - target: {fileID: 4824565705795560864, guid: 56e5cd89857b6cd4fbe09043f3bef2c3, type: 3}
       propertyPath: m_Name
       value: Player
