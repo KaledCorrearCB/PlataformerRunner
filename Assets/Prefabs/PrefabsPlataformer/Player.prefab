@@ -323,7 +323,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterDetector
   detectionRadius: 20
   arrowPrefab: {fileID: 919132149155446097, guid: a4b736e8b25bdb040a23f30c67c0464d, type: 3}
-  arrowHeightOffset: 2.5
+  arrowHeightOffset: 1.5
   arrowDuration: 4
   detectSound: {fileID: 8300000, guid: 53dd338ca94bf36409899a1bfe93afbc, type: 3}
   soundVolume: 1

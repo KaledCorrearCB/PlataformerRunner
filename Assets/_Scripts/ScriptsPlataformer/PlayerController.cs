@@ -136,6 +136,7 @@ public class PlayerController : MonoBehaviour
     {
         if (context.started)
         {
+            Debug.Log($"Hold started — FlowerPot: {currentFlowerPot}, WaterSource: {currentWaterSource}");
             if (currentFlowerPot != null)
             {
                 currentFlowerPot.StartWatering();

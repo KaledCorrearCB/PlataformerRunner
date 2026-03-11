@@ -35,48 +35,36 @@ public class FlowerPot : MonoBehaviour
 
     void Update()
     {
-        if (isWatering)
+        if (!isWatering) return; // *** NUEVO: salir inmediatamente si no está regando ***
+
+        if (playerWater != null && playerWater.currentWater > 0)
         {
-            // Verificar que el jugador sigue teniendo agua
-            if (playerWater != null && playerWater.currentWater > 0)
+            float waterToTransfer = wateringSpeed * Time.deltaTime;
+            waterToTransfer = Mathf.Min(waterToTransfer, playerWater.currentWater);
+            float remaining = requiredWater - currentWaterReceived;
+            waterToTransfer = Mathf.Min(waterToTransfer, remaining);
+
+            if (waterToTransfer > 0)
             {
-                // Cuánta agua transferir en este frame (sin exceder lo necesario)
-                float waterToTransfer = wateringSpeed * Time.deltaTime;
+                playerWater.UseWater(waterToTransfer);
+                currentWaterReceived += waterToTransfer;
 
-                // Limitar por el agua disponible del jugador
-                waterToTransfer = Mathf.Min(waterToTransfer, playerWater.currentWater);
-
-                // Limitar por lo que falta para completar la maceta
-                float remaining = requiredWater - currentWaterReceived;
-                waterToTransfer = Mathf.Min(waterToTransfer, remaining);
-
-                if (waterToTransfer > 0)
-                {
-                    // 1. Restar agua al jugador
-                    playerWater.UseWater(waterToTransfer); // Este método ya actualiza la barra del jugador
-
-                    // 2. Sumar a la maceta
-                    currentWaterReceived += waterToTransfer;
-
-                    // 3. Actualizar barra de progreso (si existe)
-                    if (progressBar != null)
-                        progressBar.value = currentWaterReceived;
-
-                    Debug.Log($"Regando: +{waterToTransfer} agua. Progreso: {currentWaterReceived}/{requiredWater}");
-                }
+                if (progressBar != null)
+                    progressBar.value = currentWaterReceived;
             }
+        }
 
-            // Si ya se completó, crecer
-            if (currentWaterReceived >= requiredWater)
-            {
-                GrowTree();
-            }
+        // Primero checar si completó
+        if (currentWaterReceived >= requiredWater)
+        {
+            GrowTree();
+            return; // *** NUEVO: return para no ejecutar el check de abajo ***
+        }
 
-            // Si el jugador se quedó sin agua, detener riego automáticamente
-            if (playerWater == null || playerWater.currentWater <= 0)
-            {
-                StopWatering();
-            }
+        // Luego checar si se quedó sin agua
+        if (playerWater == null || playerWater.currentWater <= 0)
+        {
+            StopWatering();
         }
     }
 
@@ -104,14 +92,27 @@ public class FlowerPot : MonoBehaviour
 
     void GrowTree()
     {
+        isWatering = false;
+
+        // *** NUEVO: avisar al PlayerWater que deje de "regar" ***
+        if (playerController == null)
+            playerController = PlayerController.instance;
+
+
+
+        // En realidad el problema está en que FlowerPot.Update() sigue
+        // llamando UseWater() después de completarse. El fix correcto:
         Instantiate(treePrefab, spawnPoint.position, Quaternion.identity);
-        Debug.Log("🌳 Árbol crecido");
+
+        if (PlayerController.instance != null && PlayerController.instance.currentFlowerPot == this)
+            PlayerController.instance.currentFlowerPot = null;
 
         if (canvas != null)
             canvas.SetActive(false);
 
         GetComponent<Collider>().enabled = false;
-        enabled = false; // Desactiva este script
+
+        enabled = false; // Esto detiene Update() — ¡ya no llama UseWater()!
     }
 
     private void OnTriggerEnter(Collider other)

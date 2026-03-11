@@ -82,14 +82,17 @@ public class PlayerWater : MonoBehaviour
     // Método para USAR agua (regar plantas)
     public bool UseWater(float amount)
     {
-        if (currentWater >= amount)
-        {
-            currentWater -= amount;
-            if (waterBar != null)
-                waterBar.value = currentWater;
-            return true;
-        }
-        return false;
+        if (currentWater <= 0f) return false;
+
+        // Usa lo que haya disponible aunque sea menos de lo pedido
+        float actualAmount = Mathf.Min(amount, currentWater);
+        currentWater -= actualAmount;
+        currentWater = Mathf.Max(currentWater, 0f); // nunca negativo
+
+        if (waterBar != null)
+            waterBar.value = currentWater;
+
+        return actualAmount > 0f;
     }
 
     // Método de ayuda para verificar sin gastar
