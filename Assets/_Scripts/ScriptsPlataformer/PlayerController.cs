@@ -1,3 +1,9 @@
+Ôªø// PlayerController.cs  ‚Üê REEMPLAZA tu versi√≥n actual
+// Cambios respecto al original (marcados con // *** NUEVO ***):
+//   1. Se agrega la variable p√∫blica currentCharacterInNeed
+//   2. OnSelect() ahora tambi√©n llama a TryDeliverKit() si hay un personaje cerca
+//   3. HandleInteractionUI() muestra el interactUI cuando hay un personaje cerca
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,7 +12,10 @@ public class PlayerController : MonoBehaviour
     // Singleton
     public static PlayerController instance;
 
-    [Header("ConfiguraciÛn de Movimiento")]
+    [Header("Sistemas del Jugador")]
+    public PlayerWater playerWater;
+
+    [Header("Configuraci√≥n de Movimiento")]
     public float moveSpeed = 5f;
     public float rotationSpeed = 10f;
     public float jumpForce = 7f;
@@ -14,20 +23,25 @@ public class PlayerController : MonoBehaviour
 
     [Header("Referencias de Escena")]
     public Transform model;
-    public GameObject interactUI; // UI de interacciÛn (opcional por ahora)
+    public GameObject interactUI; // UI de interacciÔøΩn (opcional por ahora)
+    public GameObject interactUI;
 
     // Componentes internos
     private CharacterController CharCon;
     private PlayerInput playerInput;
     private CameraController cam;
 
-    // Variables de estado y fÌsica
+    // Variables de estado y f√≠sica
     private Vector2 inputM;
     private Vector3 inputVector;
     private Vector3 movementVector;
     private float verticalVelocity;
 
     [HideInInspector] public bool stopMoving;
+    [HideInInspector] public LSEntry currentLevelNode;
+    [HideInInspector] public FlowerPot currentFlowerPot;
+    [HideInInspector] public WaterSource currentWaterSource;
+    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // *** NUEVO ***
 
     public void Awake()
     {
@@ -36,12 +50,20 @@ public class PlayerController : MonoBehaviour
         cam = FindFirstObjectByType<CameraController>();
 
         if (instance != null && instance != this)
+        if (instance != null)
         {
             Destroy(this.gameObject);
             return;
         }
 
         instance = this;
+        else
+        {
+            instance = this;
+        }
+
+        if (playerWater == null)
+            playerWater = GetComponent<PlayerWater>();
     }
 
     void Update()
@@ -63,7 +85,7 @@ public class PlayerController : MonoBehaviour
         // Leemos el input del Input System
         inputM = playerInput.actions["Move"].ReadValue<Vector2>();
 
-        // Direcciones relativas a la c·mara
+        // Direcciones relativas a la cÔøΩmara
         if (cam != null)
         {
             Vector3 camForward = cam.transform.forward;
@@ -77,11 +99,20 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // Fallback si no hay c·mara
+            // Fallback si no hay cÔøΩmara
             inputVector = new Vector3(inputM.x, 0, inputM.y);
         }
 
         // Gravedad
+        Vector3 camForward = cam.transform.forward;
+        Vector3 camRight = cam.transform.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        inputVector = camRight * inputM.x + camForward * inputM.y;
+
         if (CharCon.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
@@ -108,8 +139,56 @@ public class PlayerController : MonoBehaviour
 
     public void OnSelect()
     {
-        // Esta funciÛn queda vacÌa por ahora hasta que creemos el nuevo sistema de niveles
-        Debug.Log("BotÛn de selecciÛn presionado");
+        // Esta funciÔøΩn queda vacÔøΩa por ahora hasta que creemos el nuevo sistema de niveles
+        Debug.Log("BotÔøΩn de selecciÔøΩn presionado");
+        Debug.Log("Select pressed");
+
+        // Prioridad 1: cargar nivel (igual que antes)
+        if (currentLevelNode != null && !stopMoving)
+        {
+            Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
+            currentLevelNode.LoadLevel();
+            return;
+        }
+
+        // *** NUEVO ‚Äî Prioridad 2: entregar kit a personaje ***
+        if (currentCharacterInNeed != null)
+        {
+            currentCharacterInNeed.TryDeliverKit();
+            return;
+        }
+    }
+
+    public void OnSelectHold(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            Debug.Log($"Hold started ‚Äî FlowerPot: {currentFlowerPot}, WaterSource: {currentWaterSource}");
+            if (currentFlowerPot != null)
+            {
+                currentFlowerPot.StartWatering();
+            }
+            else if (currentWaterSource != null)
+            {
+                currentWaterSource.StartAbsorbing(this);
+                if (playerWater != null)
+                    playerWater.StartAbsorbingWater(currentWaterSource.gameObject);
+            }
+        }
+
+        if (context.canceled)
+        {
+            if (currentFlowerPot != null)
+            {
+                currentFlowerPot.StopWatering();
+            }
+            else if (currentWaterSource != null)
+            {
+                currentWaterSource.StopAbsorbing(this);
+                if (playerWater != null)
+                    playerWater.StopAbsorbingWater();
+            }
+        }
     }
 
     public void OnJump()
@@ -126,6 +205,27 @@ public class PlayerController : MonoBehaviour
         if (interactUI != null)
         {
             interactUI.SetActive(false);
+            // *** NUEVO ‚Äî currentCharacterInNeed agregado a la prioridad visual ***
+            if (currentLevelNode != null)
+            {
+                interactUI.SetActive(true);
+            }
+            else if (currentCharacterInNeed != null)  // *** NUEVO ***
+            {
+                interactUI.SetActive(true);
+            }
+            else if (currentFlowerPot != null)
+            {
+                interactUI.SetActive(true);
+            }
+            else if (currentWaterSource != null)
+            {
+                interactUI.SetActive(true);
+            }
+            else
+            {
+                interactUI.SetActive(false);
+            }
         }
     }
 }

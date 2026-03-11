@@ -10,13 +10,13 @@ public class UIController : MonoBehaviour
 
     public void Awake()
     {
-        
+
         instance = this;
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -24,10 +24,10 @@ public class UIController : MonoBehaviour
     {
         if (isFandingToBlack)
         {
-            fadeScreem.color = new Color(fadeScreem.color.r, fadeScreem.color.g, fadeScreem.color.b, Mathf.MoveTowards(fadeScreem.color.a, 1f, fadingTime * Time.deltaTime) );
+            fadeScreem.color = new Color(fadeScreem.color.r, fadeScreem.color.g, fadeScreem.color.b, Mathf.MoveTowards(fadeScreem.color.a, 1f, fadingTime * Time.deltaTime));
         }
 
-        if(isFadingFromBlack)
+        if (isFadingFromBlack)
         {
             fadeScreem.color = new Color(fadeScreem.color.r, fadeScreem.color.g, fadeScreem.color.b, Mathf.MoveTowards(fadeScreem.color.a, 0f, fadingTime * Time.deltaTime));
         }
