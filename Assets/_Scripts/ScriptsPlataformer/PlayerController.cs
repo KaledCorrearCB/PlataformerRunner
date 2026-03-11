@@ -6,10 +6,10 @@
 
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
+    // Singleton
     public static PlayerController instance;
 
     [Header("Sistemas del Jugador")]
@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Referencias de Escena")]
     public Transform model;
+    public GameObject interactUI; // UI de interacci�n (opcional por ahora)
     public GameObject interactUI;
 
     // Componentes internos
@@ -50,10 +51,14 @@ public class PlayerController : MonoBehaviour
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
 
+        if (instance != null && instance != this)
         if (instance != null)
         {
+            Destroy(this.gameObject);
             return;
         }
+
+        instance = this;
         else
         {
             instance = this;
@@ -79,8 +84,28 @@ public class PlayerController : MonoBehaviour
 
     public void GetInput()
     {
+        // Leemos el input del Input System
         inputM = playerInput.actions["Move"].ReadValue<Vector2>();
 
+        // Direcciones relativas a la c�mara
+        if (cam != null)
+        {
+            Vector3 camForward = cam.transform.forward;
+            Vector3 camRight = cam.transform.right;
+            camForward.y = 0;
+            camRight.y = 0;
+            camForward.Normalize();
+            camRight.Normalize();
+
+            inputVector = camRight * inputM.x + camForward * inputM.y;
+        }
+        else
+        {
+            // Fallback si no hay c�mara
+            inputVector = new Vector3(inputM.x, 0, inputM.y);
+        }
+
+        // Gravedad
         Vector3 camForward = cam.transform.forward;
         Vector3 camRight = cam.transform.right;
         camForward.y = 0;
@@ -116,6 +141,8 @@ public class PlayerController : MonoBehaviour
 
     public void OnSelect()
     {
+        // Esta funci�n queda vac�a por ahora hasta que creemos el nuevo sistema de niveles
+        Debug.Log("Bot�n de selecci�n presionado");
         Debug.Log("Select pressed");
 
         // Prioridad 1: cargar nivel (igual que antes)
@@ -176,8 +203,10 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteractionUI()
     {
+        // Desactivado temporalmente ya que no hay nodos de nivel
         if (interactUI != null)
         {
+            interactUI.SetActive(false);
             // *** NUEVO — currentCharacterInNeed agregado a la prioridad visual ***
             if (currentLevelNode != null)
             {
