@@ -1,10 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
-    //hacerlo singletone
+    // Singleton
     public static PlayerController instance;
 
     [Header("Configuración de Movimiento")]
@@ -15,7 +14,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Referencias de Escena")]
     public Transform model;
-    public GameObject interactUI; // Arrastra aquí tu texto de "Presiona E"
+    public GameObject interactUI; // UI de interacción (opcional por ahora)
 
     // Componentes internos
     private CharacterController CharCon;
@@ -29,30 +28,24 @@ public class PlayerController : MonoBehaviour
     private float verticalVelocity;
 
     [HideInInspector] public bool stopMoving;
-    [HideInInspector] public LSEntry currentLevelNode;
 
     public void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
-        
-        if(instance != null)
+
+        if (instance != null && instance != this)
         {
+            Destroy(this.gameObject);
             return;
         }
 
-        else
-        {
-            instance = this;
-        }
-            
-
+        instance = this;
     }
 
     void Update()
     {
-        // Si el nivel está cargando, bloqueamos todo el control
         if (stopMoving)
         {
             if (interactUI != null) interactUI.SetActive(false);
@@ -67,20 +60,28 @@ public class PlayerController : MonoBehaviour
 
     public void GetInput()
     {
+        // Leemos el input del Input System
         inputM = playerInput.actions["Move"].ReadValue<Vector2>();
 
-        // Direcciones de la cámara
-        Vector3 camForward = cam.transform.forward;
-        Vector3 camRight = cam.transform.right;
-        camForward.y = 0;
-        camRight.y = 0;
-        camForward.Normalize();
-        camRight.Normalize();
+        // Direcciones relativas a la cámara
+        if (cam != null)
+        {
+            Vector3 camForward = cam.transform.forward;
+            Vector3 camRight = cam.transform.right;
+            camForward.y = 0;
+            camRight.y = 0;
+            camForward.Normalize();
+            camRight.Normalize();
 
-        // Cálculo de movimiento
-        inputVector = camRight * inputM.x + camForward * inputM.y;
+            inputVector = camRight * inputM.x + camForward * inputM.y;
+        }
+        else
+        {
+            // Fallback si no hay cámara
+            inputVector = new Vector3(inputM.x, 0, inputM.y);
+        }
 
-        // Gravedad constante
+        // Gravedad
         if (CharCon.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
@@ -105,14 +106,10 @@ public class PlayerController : MonoBehaviour
         CharCon.Move(movementVector * Time.deltaTime);
     }
 
-    // Se ejecuta automáticamente por el InputSystem al presionar el botón de "Select" (E)
     public void OnSelect()
     {
-        if (currentLevelNode != null && !stopMoving)
-        {
-            Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
-            currentLevelNode.LoadLevel();
-        }
+        // Esta función queda vacía por ahora hasta que creemos el nuevo sistema de niveles
+        Debug.Log("Botón de selección presionado");
     }
 
     public void OnJump()
@@ -123,14 +120,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Controla si el cartel de "Presiona E" se ve o no
     private void HandleInteractionUI()
     {
+        // Desactivado temporalmente ya que no hay nodos de nivel
         if (interactUI != null)
         {
-            // Solo se activa si el jugador está sobre un portal (currentLevelNode no es nulo)
-            interactUI.SetActive(currentLevelNode != null);
+            interactUI.SetActive(false);
         }
     }
-
 }
