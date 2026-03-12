@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Sistemas del Jugador")]
     public PlayerWater playerWater;
+    public Animator anim;
 
     [Header("Configuración de Movimiento")]
     public float moveSpeed = 5f;
@@ -63,6 +64,8 @@ public class PlayerController : MonoBehaviour
         if (stopMoving)
         {
             if (interactUI != null) interactUI.SetActive(false);
+            // Si el jugador se detiene por lógica, ponemos la animación en 0
+            if (anim != null) anim.SetFloat("Speed", 0f);
             return;
         }
 
@@ -70,6 +73,14 @@ public class PlayerController : MonoBehaviour
         OnMove();
         RotateModel();
         HandleInteractionUI();
+
+        // *** ANIMACIÓN: Enviamos la magnitud del input al Blend Tree ***
+        // Usamos inputM.magnitude porque nos da un valor entre 0 y 1 
+        // ideal para el Blend Tree que configuramos antes.
+        if (anim != null)
+        {
+            anim.SetFloat("Speed", inputM.magnitude, 0.1f, Time.deltaTime);
+        }
     }
 
     public void GetInput()
