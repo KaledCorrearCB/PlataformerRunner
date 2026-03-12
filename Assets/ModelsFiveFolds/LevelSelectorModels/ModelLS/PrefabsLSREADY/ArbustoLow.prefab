@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 2169121083303295477}
   - component: {fileID: 2407604078535115773}
   - component: {fileID: 624166410696948026}
+  - component: {fileID: 4590416848242807388}
   m_Layer: 0
   m_Name: ArbustoLow
-  m_TagString: Untagged
+  m_TagString: ObstaculoWobble
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -113,3 +114,18 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 2434866712158625026, guid: d11c14c4529f3684f9f1ec12a2660c64, type: 3}
+--- !u!114 &4590416848242807388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 954104084838325594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a702cb06db2ad9441a84b1acff39313c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProceduralWobble
+  wobbleIntensity: 0.3
+  wobbleSpeed: 15
+  wobbleDamping: 4

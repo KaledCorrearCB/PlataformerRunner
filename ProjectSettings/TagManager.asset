@@ -12,6 +12,7 @@ TagManager:
   - FireWall
   - Plataform
   - Moto
+  - ObstaculoWobble
   layers:
   - Default
   - TransparentFX
