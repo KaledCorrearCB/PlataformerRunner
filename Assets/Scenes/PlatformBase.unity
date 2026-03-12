@@ -3692,6 +3692,10 @@ PrefabInstance:
       propertyPath: playerWater
       value: 
       objectReference: {fileID: 1186212869}
+    - target: {fileID: 5723737793143077320, guid: 56e5cd89857b6cd4fbe09043f3bef2c3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7244426206401741673, guid: 56e5cd89857b6cd4fbe09043f3bef2c3, type: 3}
       propertyPath: waterBar
       value: 
