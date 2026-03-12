@@ -46,6 +46,7 @@ public class PlayerController : MonoBehaviour
     {
 
         Debug.Log(" Solo estoy aqui para ver si se arregla esta maricada");
+
         playerInput = GetComponent<PlayerInput>();
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
