@@ -60,25 +60,26 @@ public class ShopManager : MonoBehaviour
 
     public void PurchaseItem(ShopItemData item)
     {
-        if (purchasedItems.Contains(item.itemName))
+        if (purchasedItems.Contains(item.itemName)) return;
+
+        purchasedItems.Add(item.itemName);
+        PlayerPrefs.SetInt(item.itemName, 1);
+        PlayerPrefs.Save();
+
+        // --- EL FIX: Buscar el objeto en la escena ---
+        // Buscamos a "Athos" (o el nombre que tenga el ítem) entre los objetos desactivados
+        GameObject[] todosLosObjetos = Resources.FindObjectsOfTypeAll<GameObject>();
+        foreach (GameObject go in todosLosObjetos)
         {
-            Debug.Log($"Ya compraste: {item.itemName}");
-            return;
+            // Si el nombre del objeto en la escena coincide con el itemName del producto
+            if (go.name == item.itemName)
+            {
+                go.SetActive(true);
+                Debug.Log($"¡{go.name} activado en la escena!");
+            }
         }
 
-        // Registrar compra
-        purchasedItems.Add(item.itemName);
-        Debug.Log($"✅ Comprado: {item.itemName}");
-
-        // Activar contenido exclusivo
-        if (item.exclusiveContentPrefab != null)
-            Instantiate(item.exclusiveContentPrefab);
-
-        // Refrescar UI para mostrar "Ya comprado"
-        if (shopUI != null)
-            shopUI.RefreshUI(availableItems, purchasedItems);
-
-        // Iniciar cuenta regresiva para el mensaje de impacto
+        if (shopUI != null) shopUI.RefreshUI(availableItems, purchasedItems);
         StartCoroutine(ShowImpactMessageAfterDelay(item));
     }
 
