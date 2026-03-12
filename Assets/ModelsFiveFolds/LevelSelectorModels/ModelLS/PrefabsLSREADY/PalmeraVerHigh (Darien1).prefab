@@ -126,6 +126,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a702cb06db2ad9441a84b1acff39313c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralWobble
-  wobbleIntensity: 0.3
-  wobbleSpeed: 15
-  wobbleDamping: 4
+  intensity: 0.2
+  speed: 12
+  damping: 4
