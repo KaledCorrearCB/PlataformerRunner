@@ -32,6 +32,14 @@ public class ShopManager : MonoBehaviour
 
     void Start()
     {
+        // Solo borramos los ítems que están en nuestra lista de la tienda
+        foreach (ShopItemData item in availableItems)
+        {
+            if (PlayerPrefs.HasKey(item.itemName))
+            {
+                PlayerPrefs.DeleteKey(item.itemName);
+            }
+        }
         if (shopPanel != null)
             shopPanel.SetActive(false);
     }
