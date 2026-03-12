@@ -1,10 +1,4 @@
-﻿// PlayerController.cs  ← REEMPLAZA tu versión actual
-// Cambios respecto al original (marcados con // *** NUEVO ***):
-//   1. Se agrega la variable pública currentCharacterInNeed
-//   2. OnSelect() ahora también llama a TryDeliverKit() si hay un personaje cerca
-//   3. HandleInteractionUI() muestra el interactUI cuando hay un personaje cerca
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
 
@@ -41,7 +35,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
-    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // *** NUEVO ***
+    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // * NUEVO *
 
     public void Awake()
     {
@@ -140,7 +134,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // *** NUEVO — Prioridad 2: entregar kit a personaje ***
+        // * NUEVO — Prioridad 2: entregar kit a personaje *
         if (currentCharacterInNeed != null)
         {
             currentCharacterInNeed.TryDeliverKit();
@@ -199,12 +193,12 @@ public class PlayerController : MonoBehaviour
     {
         if (interactUI != null)
         {
-            // *** NUEVO — currentCharacterInNeed agregado a la prioridad visual ***
+            // * NUEVO — currentCharacterInNeed agregado a la prioridad visual *
             if (currentLevelNode != null)
             {
                 interactUI.SetActive(true);
             }
-            else if (currentCharacterInNeed != null)  // *** NUEVO ***
+            else if (currentCharacterInNeed != null)  // * NUEVO *
             {
                 interactUI.SetActive(true);
             }

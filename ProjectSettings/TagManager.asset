@@ -11,6 +11,8 @@ TagManager:
   - WaterSlide
   - FireWall
   - Plataform
+  - Moto
+  - ObstaculoWobble
   layers:
   - Default
   - TransparentFX
