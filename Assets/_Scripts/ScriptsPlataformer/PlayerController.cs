@@ -1,15 +1,9 @@
-﻿// PlayerController.cs  ← REEMPLAZA tu versión actual
-// Cambios respecto al original (marcados con // *** NUEVO ***):
-//   1. Se agrega la variable pública currentCharacterInNeed
-//   2. OnSelect() ahora también llama a TryDeliverKit() si hay un personaje cerca
-//   3. HandleInteractionUI() muestra el interactUI cuando hay un personaje cerca
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
-    // Singleton
     public static PlayerController instance;
 
     [Header("Sistemas del Jugador")]
@@ -23,7 +17,6 @@ public class PlayerController : MonoBehaviour
 
     [Header("Referencias de Escena")]
     public Transform model;
-    public GameObject interactUI; // UI de interacci�n (opcional por ahora)
     public GameObject interactUI;
 
     // Componentes internos
@@ -41,24 +34,21 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
-    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // *** NUEVO ***
+    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // * NUEVO *
 
     public void Awake()
     {
 
         Debug.Log(" Solo estoy aqui para ver si se arregla esta maricada");
+
         playerInput = GetComponent<PlayerInput>();
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
 
-        if (instance != null && instance != this)
         if (instance != null)
         {
-            Destroy(this.gameObject);
             return;
         }
-
-        instance = this;
         else
         {
             instance = this;
@@ -84,28 +74,8 @@ public class PlayerController : MonoBehaviour
 
     public void GetInput()
     {
-        // Leemos el input del Input System
         inputM = playerInput.actions["Move"].ReadValue<Vector2>();
 
-        // Direcciones relativas a la c�mara
-        if (cam != null)
-        {
-            Vector3 camForward = cam.transform.forward;
-            Vector3 camRight = cam.transform.right;
-            camForward.y = 0;
-            camRight.y = 0;
-            camForward.Normalize();
-            camRight.Normalize();
-
-            inputVector = camRight * inputM.x + camForward * inputM.y;
-        }
-        else
-        {
-            // Fallback si no hay c�mara
-            inputVector = new Vector3(inputM.x, 0, inputM.y);
-        }
-
-        // Gravedad
         Vector3 camForward = cam.transform.forward;
         Vector3 camRight = cam.transform.right;
         camForward.y = 0;
@@ -141,8 +111,6 @@ public class PlayerController : MonoBehaviour
 
     public void OnSelect()
     {
-        // Esta funci�n queda vac�a por ahora hasta que creemos el nuevo sistema de niveles
-        Debug.Log("Bot�n de selecci�n presionado");
         Debug.Log("Select pressed");
 
         // Prioridad 1: cargar nivel (igual que antes)
@@ -153,7 +121,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // *** NUEVO — Prioridad 2: entregar kit a personaje ***
+        // * NUEVO — Prioridad 2: entregar kit a personaje *
         if (currentCharacterInNeed != null)
         {
             currentCharacterInNeed.TryDeliverKit();
@@ -203,16 +171,14 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteractionUI()
     {
-        // Desactivado temporalmente ya que no hay nodos de nivel
         if (interactUI != null)
         {
-            interactUI.SetActive(false);
-            // *** NUEVO — currentCharacterInNeed agregado a la prioridad visual ***
+            // * NUEVO — currentCharacterInNeed agregado a la prioridad visual *
             if (currentLevelNode != null)
             {
                 interactUI.SetActive(true);
             }
-            else if (currentCharacterInNeed != null)  // *** NUEVO ***
+            else if (currentCharacterInNeed != null)  // * NUEVO *
             {
                 interactUI.SetActive(true);
             }
