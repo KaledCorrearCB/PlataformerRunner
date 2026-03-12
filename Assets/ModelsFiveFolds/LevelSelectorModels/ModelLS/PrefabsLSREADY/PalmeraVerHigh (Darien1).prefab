@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 1980363016181256843}
   - component: {fileID: 5444291220633606899}
   - component: {fileID: 7337518132762183078}
+  - component: {fileID: -2838490118463952442}
   m_Layer: 0
   m_Name: PalmeraVerHigh (Darien1)
-  m_TagString: Untagged
+  m_TagString: ObstaculoWobble
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -113,3 +114,18 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7080587467511034800, guid: d17b1a6f890d567468689041c7f5eb18, type: 3}
+--- !u!114 &-2838490118463952442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1284228182281338736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a702cb06db2ad9441a84b1acff39313c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProceduralWobble
+  wobbleIntensity: 0.3
+  wobbleSpeed: 15
+  wobbleDamping: 4

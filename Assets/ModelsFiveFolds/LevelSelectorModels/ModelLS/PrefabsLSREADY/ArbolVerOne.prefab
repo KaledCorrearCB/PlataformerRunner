@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 5842672566390141429}
   - component: {fileID: 1715409636393963934}
   - component: {fileID: 4492417826611682577}
+  - component: {fileID: -6943065603017720623}
   m_Layer: 0
   m_Name: ArbolVerOne
-  m_TagString: Untagged
+  m_TagString: ObstaculoWobble
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -113,3 +114,18 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 1244776425715413010, guid: d81b48f4e8a8a6c4bad77df05b7ab671, type: 3}
+--- !u!114 &-6943065603017720623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6982796974639603841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a702cb06db2ad9441a84b1acff39313c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProceduralWobble
+  wobbleIntensity: 0.3
+  wobbleSpeed: 15
+  wobbleDamping: 4
