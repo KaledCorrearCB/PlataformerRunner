@@ -3,69 +3,56 @@ using UnityEngine;
 
 public class ProceduralWobble : MonoBehaviour
 {
-    [Header("Ajustes de Gelatina")]
-    [Tooltip("Que tanto se estira/contrae. Valores entre 0.1 y 0.5 son buenos.")]
-    public float wobbleIntensity = 0.3f; // Intensidad inicial
-    [Tooltip("Que tan rapido bota. Mayor = mas rapido.")]
-    public float wobbleSpeed = 15f;    // Frecuencia
-    [Tooltip("Que tan rapido para de botar. Mayor = para antes.")]
-    public float wobbleDamping = 4f;   // Amortiguación
+    [Header("Ajustes de Feeling (Script A)")]
+    [Tooltip("Arboles: 0.2 | Arbustos: 0.05")]
+    public float intensity = 0.2f;
+    public float speed = 15f;
+    public float damping = 5f;
 
-    private Vector3 originalScale;     // Escala de reposo
-    private Coroutine currentWobble;   // Referencia a la corrutina activa
+    private Vector3 originalScale;
+    private Coroutine currentWobble;
 
     private void Start()
     {
-        // 1. Guardamos la escala original para tener una base
         originalScale = transform.localScale;
     }
 
-    // 2. Esta funcion sera llamada por el script del jugador
     public void TriggerWobble()
     {
-        // Si ya esta wobbling, paramos la corrutina vieja para iniciar una nueva limpia
-        if (currentWobble != null)
-        {
-            StopCoroutine(currentWobble);
-        }
-
-        // Iniciamos el efecto
+        if (currentWobble != null) StopCoroutine(currentWobble);
         currentWobble = StartCoroutine(WobbleRoutine());
     }
 
-    // 3. La matemágica del efecto jelly (corrutina)
     private IEnumerator WobbleRoutine()
     {
         float time = 0f;
 
-        // El bucle sigue mientras el wobble sea visible
         while (time < 1f)
         {
-            time += Time.deltaTime * wobbleDamping;
+            time += Time.deltaTime * damping;
 
-            // Calculamos un valor oscilante que decrece con el tiempo
-            // Usamos Coseno para que empiece con la maxima fuerza en t=0
-            float sinWave = Mathf.Cos(time * wobbleSpeed);
-
-            // Factor de caida: va de 1 a 0
+            // Usamos la onda del Script A
+            float oscillation = Mathf.Cos(time * speed);
             float decay = 1f - time;
+            float offset = intensity * oscillation * decay;
 
-            // Escala modificada: EscalaOriginal + (Intensidad * Onda * Caida)
-            // Esto hace que el objeto baje un poco (en Y) y se estire (en X/Z) 
-            // como si se aplastara al chocar.
-            Vector3 wobbleScale = new Vector3(
-                originalScale.x + (originalScale.x * wobbleIntensity * sinWave * decay),
-                originalScale.y - (originalScale.y * wobbleIntensity * sinWave * decay), // Invertimos Y
-                originalScale.z + (originalScale.z * wobbleIntensity * sinWave * decay)
+            // Aplicamos la matematica exacta del Script A que te gusto:
+            // X y Z aumentan, Y disminuye (o viceversa) segun el offset
+            Vector3 targetScale = new Vector3(
+                originalScale.x + (offset * originalScale.x),
+                originalScale.y - (offset * originalScale.y),
+                originalScale.z + (offset * originalScale.z)
             );
 
-            // Aplicamos la nueva escala
-            transform.localScale = wobbleScale;
+            // PROTECCION PARA ARBUSTOS: Evita que la escala sea negativa o cero
+            targetScale.x = Mathf.Max(targetScale.x, 0.01f);
+            targetScale.y = Mathf.Max(targetScale.y, 0.01f);
+            targetScale.z = Mathf.Max(targetScale.z, 0.01f);
 
-            yield return null; // Esperamos al siguiente frame
+            transform.localScale = targetScale;
+            yield return null;
         }
 
-        // 4. Al terminar, forzamos la escala original para no tener errores acumulados
         transform.localScale = originalScale;
         currentWobble = null;
     }
