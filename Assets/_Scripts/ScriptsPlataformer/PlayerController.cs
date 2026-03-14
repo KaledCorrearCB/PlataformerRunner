@@ -80,6 +80,8 @@ public class PlayerController : MonoBehaviour
         if (anim != null)
         {
             anim.SetFloat("Speed", inputM.magnitude, 0.1f, Time.deltaTime);
+
+            anim.SetBool("IsGrounded", CharCon.isGrounded);
         }
     }
 
@@ -177,7 +179,14 @@ public class PlayerController : MonoBehaviour
         if (CharCon.isGrounded)
         {
             verticalVelocity = jumpForce;
+
+            if (anim != null)
+            {
+                anim.SetTrigger("Jump");
+            }
         }
+
+
     }
 
     private void HandleInteractionUI()

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c68bc1e472b56344801829b68983ef2, type: 3}
   m_Name: Item1
   m_EditorClassIdentifier: Assembly-CSharp::ShopItemData
-  itemName: "\xCDtem Exclusivo"
+  itemName: athos
   description: "Descripci\xF3n del contenido exclusivo"
   icon: {fileID: 21300000, guid: 3ec2ac471f9a6254c9ec41c84b6b1c99, type: 3}
-  exclusiveContentPrefab: {fileID: 919132149155446097, guid: bb0764b3fdbb1f94485348fa45ce9c19, type: 3}
+  exclusiveContentPrefab: {fileID: 0}
   unlockMessage: "\xA1Desbloqueaste el contenido exclusivo!"
   impactMessage: "Con las donaciones totales logradas por ti y el resto de la comunidad
     se salvaron m\xE1s de 120 familias. \U0001F49A"
