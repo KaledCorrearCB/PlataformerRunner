@@ -17,13 +17,22 @@ public class LevelSelectorPlayer : MonoBehaviour
     private bool hasMoto = false;
     private bool isUsingMoto = false;
 
+    [Header("Animacion")]
+    [Tooltip("Arrastra aqui el componente Animator del modelo del personaje")]
+    public Animator animator;
+    [Tooltip("Nombre exacto del parametro (Float) en el Animator (ej: Speed)")]
+    public string parametroVelocidad = "Speed";
+
     private CharacterController controller;
     private Vector3 velocity;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-        puedeMoversis = true; // Aseguramos que inicie pudiendo moverse
+        puedeMoversis = true;
+
+        // Si no asignaste el Animator manualmente, intentamos buscarlo en los hijos
+        if (animator == null) animator = GetComponentInChildren<Animator>();
 
         // Estado inicial de las skins
         if (normalSkin) normalSkin.SetActive(true);
@@ -32,12 +41,10 @@ public class LevelSelectorPlayer : MonoBehaviour
 
     private void Update()
     {
-        // SOLO PROCESAMOS INPUT SI ESTÁ DESBLOQUEADO
         if (puedeMoversis)
         {
             MoverPersonaje();
 
-            // Tecla 1 para cambiar de skin si ya tiene la moto en el inventario
             if (Input.GetKeyDown(KeyCode.Alpha1) && hasMoto)
             {
                 ToggleMoto();
@@ -45,8 +52,9 @@ public class LevelSelectorPlayer : MonoBehaviour
         }
         else
         {
-            // SI ESTÁ BLOQUEADO: Aplicamos gravedad de todas formas para evitar que flote
             AplicarGravedadSolo();
+            // Si el movimiento esta bloqueado, forzamos la animacion a 0 (Idle)
+            ActualizarAnimacion(0f);
         }
     }
 
@@ -68,14 +76,30 @@ public class LevelSelectorPlayer : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             controller.Move(moveDirection * moveSpeed * Time.deltaTime);
+
+            // Enviamos la magnitud del movimiento al Animator
+            ActualizarAnimacion(moveDirection.magnitude);
+        }
+        else
+        {
+            // No hay input, enviamos 0 para volver a Idle
+            ActualizarAnimacion(0f);
         }
 
         controller.Move(velocity * Time.deltaTime);
     }
 
+    private void ActualizarAnimacion(float valor)
+    {
+        if (animator != null)
+        {
+            // Usamos un Float para que el Animator decida entre caminar/correr segun la velocidad
+            animator.SetFloat(parametroVelocidad, valor);
+        }
+    }
+
     private void AplicarGravedadSolo()
     {
-        // Esto mantiene al personaje pegado al suelo durante la cutscene si hay desniveles
         if (controller.isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
@@ -92,6 +116,10 @@ public class LevelSelectorPlayer : MonoBehaviour
         if (motoSkin) motoSkin.SetActive(isUsingMoto);
 
         moveSpeed = isUsingMoto ? 15f : 8f;
+
+        // Al cambiar de skin, refrescamos la referencia del Animator si es necesario
+        // (Por si la moto tiene su propio Animator independiente)
+        animator = GetComponentInChildren<Animator>();
     }
 
     private void OnTriggerEnter(Collider other)
