@@ -8,6 +8,9 @@ public class LevelSelectorPlayer : MonoBehaviour
     public float rotationSpeed = 15f;
     public float gravity = -20f;
 
+    // VARIABLE PARA BLOQUEO EXTERNO (Usada por CampamentoConstructor)
+    public static bool puedeMoversis = true;
+
     [Header("Skins e Inventario")]
     public GameObject normalSkin;
     public GameObject motoSkin;
@@ -20,6 +23,7 @@ public class LevelSelectorPlayer : MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        puedeMoversis = true; // Aseguramos que inicie pudiendo moverse
 
         // Estado inicial de las skins
         if (normalSkin) normalSkin.SetActive(true);
@@ -28,12 +32,21 @@ public class LevelSelectorPlayer : MonoBehaviour
 
     private void Update()
     {
-        MoverPersonaje();
-
-        // Tecla 1 para cambiar de skin si ya tiene la moto en el inventario
-        if (Input.GetKeyDown(KeyCode.Alpha1) && hasMoto)
+        // SOLO PROCESAMOS INPUT SI ESTÁ DESBLOQUEADO
+        if (puedeMoversis)
         {
-            ToggleMoto();
+            MoverPersonaje();
+
+            // Tecla 1 para cambiar de skin si ya tiene la moto en el inventario
+            if (Input.GetKeyDown(KeyCode.Alpha1) && hasMoto)
+            {
+                ToggleMoto();
+            }
+        }
+        else
+        {
+            // SI ESTÁ BLOQUEADO: Aplicamos gravedad de todas formas para evitar que flote
+            AplicarGravedadSolo();
         }
     }
 
@@ -42,17 +55,14 @@ public class LevelSelectorPlayer : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        // Movimiento relativo al mundo (isométrico)
         Vector3 moveDirection = new Vector3(horizontal, 0f, vertical).normalized;
 
-        // Gravedad para no flotar en los cambios de relieve del mapa
         if (controller.isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
         }
         velocity.y += gravity * Time.deltaTime;
 
-        // Rotación y Traslación
         if (moveDirection.magnitude >= 0.1f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
@@ -60,7 +70,17 @@ public class LevelSelectorPlayer : MonoBehaviour
             controller.Move(moveDirection * moveSpeed * Time.deltaTime);
         }
 
-        // Aplicar la velocidad vertical (caída)
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void AplicarGravedadSolo()
+    {
+        // Esto mantiene al personaje pegado al suelo durante la cutscene si hay desniveles
+        if (controller.isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+        velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
@@ -68,18 +88,14 @@ public class LevelSelectorPlayer : MonoBehaviour
     {
         isUsingMoto = !isUsingMoto;
 
-        // Cambiamos visibilidad de los modelos hijos
         if (normalSkin) normalSkin.SetActive(!isUsingMoto);
         if (motoSkin) motoSkin.SetActive(isUsingMoto);
 
-        // Aumentar velocidad si usa la moto (ajusta el 15f a tu gusto)
         moveSpeed = isUsingMoto ? 15f : 8f;
     }
 
-    // --- DETECCION DE TRIGGERS (Items) ---
     private void OnTriggerEnter(Collider other)
     {
-        // Detectar si tocamos el item de la moto para guardarlo en el inventario
         if (other.CompareTag("Moto"))
         {
             hasMoto = true;
@@ -88,18 +104,13 @@ public class LevelSelectorPlayer : MonoBehaviour
         }
     }
 
-    // --- INTERACCION JELLY (Choques con arbustos/arboles) ---
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        // Verificamos si el objeto que chocamos tiene el Tag que creamos para los arbustos
         if (hit.gameObject.CompareTag("ObstaculoWobble"))
         {
-            // Buscamos el script ProceduralWobble en el arbusto
             ProceduralWobble wobbler = hit.gameObject.GetComponent<ProceduralWobble>();
-
             if (wobbler != null)
             {
-                // Activamos el efecto de gelatina
                 wobbler.TriggerWobble();
             }
         }
