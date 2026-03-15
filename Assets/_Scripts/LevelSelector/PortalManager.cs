@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using UnityEngine.InputSystem; // Necesario para el nuevo Input System
 
 public class PortalManager : MonoBehaviour
 {
@@ -21,8 +22,32 @@ public class PortalManager : MonoBehaviour
     public CanvasGroup fadeGroup;
     public MonoBehaviour scriptMovimientoJugador;
 
+    // --- NUEVAS VARIABLES DE INTERACCIÓN ---
+    private PlayerInput inputActions;
+    private bool jugadorEstaCerca = false;
     private GameObject jugador;
     private bool puedeUsarPortal = true;
+
+    void Awake()
+    {
+        // Inicializamos el mapa de controles generado (PlayerInput.cs)
+        inputActions = new PlayerInput();
+    }
+
+    void OnEnable()
+    {
+        // Activamos el mapa de acciones "Gameplay"
+        inputActions.Gameplay.Enable();
+
+        // Suscribimos el botón de "Interact" (Espacio/Mando)
+        // Cuando se presione, ejecutará la función IntentarEntrar
+        inputActions.Gameplay.Interact.performed += ctx => IntentarEntrarAlNivel();
+    }
+
+    void OnDisable()
+    {
+        inputActions.Gameplay.Disable();
+    }
 
     void Start()
     {
@@ -37,9 +62,7 @@ public class PortalManager : MonoBehaviour
 
         int estado = PlayerPrefs.GetInt(key, 0);
 
-        // --- CORRECCIÓN DE ESTADO INICIAL ---
-        // Si el nivel está pendiente de animación (1) o no completado (0), 
-        // forzamos el mástil abajo de inmediato.
+        // Forzado de estado visual inicial (Anti-glitch)
         if (estado == 0 || estado == 1)
         {
             soporteBandera.localScale = new Vector3(1, 0, 1);
@@ -50,7 +73,6 @@ public class PortalManager : MonoBehaviour
             soporteBandera.localScale = Vector3.one;
             bandera.SetActive(true);
         }
-        // ------------------------------------
 
         if (estado == 1)
         {
@@ -62,13 +84,38 @@ public class PortalManager : MonoBehaviour
         }
     }
 
+    // --- LÓGICA DE DETECCIÓN ---
+
     private void OnTriggerEnter(Collider other)
     {
-        if (puedeUsarPortal && other.CompareTag("Player"))
+        if (other.CompareTag("Player") && puedeUsarPortal)
+        {
+            jugadorEstaCerca = true;
+            Debug.Log("Jugador en zona del portal " + portalID + ". Presiona ESPACIO.");
+            // NOTA: Aquí activaremos el Panel de Info (Estrellas/Foto) en el siguiente paso.
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            jugadorEstaCerca = false;
+            Debug.Log("Jugador salió de la zona.");
+            // NOTA: Aquí ocultaremos el Panel de Info en el siguiente paso.
+        }
+    }
+
+    // Función que llama el Input System
+    private void IntentarEntrarAlNivel()
+    {
+        if (jugadorEstaCerca && puedeUsarPortal)
         {
             StartCoroutine(IrAlNivel());
         }
     }
+
+    // --- CORRUTINAS DE TRANSICIÓN ---
 
     IEnumerator IrAlNivel()
     {
@@ -85,10 +132,8 @@ public class PortalManager : MonoBehaviour
         CharacterController cc = jugador.GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
 
-        // El fade empieza en 1 (negro) para ocultar el snap de posición
         if (fadeGroup != null) fadeGroup.alpha = 1;
 
-        // Teletransporte y Rotación
         Vector3 posFinal = puntoObservacion.position;
         posFinal.y += offsetEnY;
         jugador.transform.position = posFinal;
@@ -102,7 +147,6 @@ public class PortalManager : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         if (fadeGroup != null) yield return StartCoroutine(Fade(0, 0.8f));
 
-        // Animación Mástil
         float elapsed = 0;
         while (elapsed < 1.5f)
         {
