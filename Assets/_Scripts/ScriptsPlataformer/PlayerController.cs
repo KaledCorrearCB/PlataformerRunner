@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
+
+// Esto soluciona el error CS1061 al diferenciar el componente de tu clase generada
+using UnityPlayerInput = UnityEngine.InputSystem.PlayerInput;
 
 public class PlayerController : MonoBehaviour
 {
@@ -22,7 +24,7 @@ public class PlayerController : MonoBehaviour
 
     // Componentes internos
     private CharacterController CharCon;
-    private PlayerInput playerInput;
+    private UnityPlayerInput playerInputComponent; // Usamos el alias para evitar conflictos
     private CameraController cam;
 
     // Variables de estado y física
@@ -35,25 +37,21 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
-    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // * NUEVO *
+    [HideInInspector] public CharacterInNeed currentCharacterInNeed;
 
     public void Awake()
     {
-
-        Debug.Log(" Solo estoy aqui para ver si se arregla esta maricada");
-
-        playerInput = GetComponent<PlayerInput>();
+        // Obtenemos el componente usando el alias definido arriba
+        playerInputComponent = GetComponent<UnityPlayerInput>();
         CharCon = GetComponent<CharacterController>();
         cam = FindFirstObjectByType<CameraController>();
 
-        if (instance != null)
+        if (instance != null && instance != this)
         {
+            Destroy(this.gameObject);
             return;
         }
-        else
-        {
-            instance = this;
-        }
+        instance = this;
 
         if (playerWater == null)
             playerWater = GetComponent<PlayerWater>();
@@ -64,39 +62,41 @@ public class PlayerController : MonoBehaviour
         if (stopMoving)
         {
             if (interactUI != null) interactUI.SetActive(false);
-            // Si el jugador se detiene por lógica, ponemos la animación en 0
             if (anim != null) anim.SetFloat("Speed", 0f);
             return;
         }
 
         GetInput();
-        OnMove();
+        ApplyMovement();
         RotateModel();
         HandleInteractionUI();
 
-        // *** ANIMACIÓN: Enviamos la magnitud del input al Blend Tree ***
-        // Usamos inputM.magnitude porque nos da un valor entre 0 y 1 
-        // ideal para el Blend Tree que configuramos antes.
         if (anim != null)
         {
             anim.SetFloat("Speed", inputM.magnitude, 0.1f, Time.deltaTime);
-
             anim.SetBool("IsGrounded", CharCon.isGrounded);
         }
     }
 
     public void GetInput()
     {
-        inputM = playerInput.actions["Move"].ReadValue<Vector2>();
+        // Acceso seguro a las acciones del Asset configurado en el Inspector
+        if (playerInputComponent != null && playerInputComponent.actions != null)
+        {
+            inputM = playerInputComponent.actions["Move"].ReadValue<Vector2>();
+        }
 
-        Vector3 camForward = cam.transform.forward;
-        Vector3 camRight = cam.transform.right;
-        camForward.y = 0;
-        camRight.y = 0;
-        camForward.Normalize();
-        camRight.Normalize();
+        if (cam != null)
+        {
+            Vector3 camForward = cam.transform.forward;
+            Vector3 camRight = cam.transform.right;
+            camForward.y = 0;
+            camRight.y = 0;
+            camForward.Normalize();
+            camRight.Normalize();
 
-        inputVector = camRight * inputM.x + camForward * inputM.y;
+            inputVector = camRight * inputM.x + camForward * inputM.y;
+        }
 
         if (CharCon.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
@@ -117,24 +117,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void OnMove()
+    public void ApplyMovement()
     {
-        CharCon.Move(movementVector * Time.deltaTime);
+        if (CharCon != null)
+        {
+            CharCon.Move(movementVector * Time.deltaTime);
+        }
     }
 
+    // Vincula estos métodos en los Unity Events del componente Player Input del inspector
     public void OnSelect()
     {
-        Debug.Log("Select pressed");
+        if (stopMoving) return;
 
-        // Prioridad 1: cargar nivel (igual que antes)
-        if (currentLevelNode != null && !stopMoving)
+        if (currentLevelNode != null)
         {
-            Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
             currentLevelNode.LoadLevel();
             return;
         }
 
-        // * NUEVO — Prioridad 2: entregar kit a personaje *
         if (currentCharacterInNeed != null)
         {
             currentCharacterInNeed.TryDeliverKit();
@@ -142,78 +143,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void OnSelectHold(InputAction.CallbackContext context)
-    {
-        if (context.started)
-        {
-            Debug.Log($"Hold started — FlowerPot: {currentFlowerPot}, WaterSource: {currentWaterSource}");
-            if (currentFlowerPot != null)
-            {
-                currentFlowerPot.StartWatering();
-            }
-            else if (currentWaterSource != null)
-            {
-                currentWaterSource.StartAbsorbing(this);
-                if (playerWater != null)
-                    playerWater.StartAbsorbingWater(currentWaterSource.gameObject);
-            }
-        }
-
-        if (context.canceled)
-        {
-            if (currentFlowerPot != null)
-            {
-                currentFlowerPot.StopWatering();
-            }
-            else if (currentWaterSource != null)
-            {
-                currentWaterSource.StopAbsorbing(this);
-                if (playerWater != null)
-                    playerWater.StopAbsorbingWater();
-            }
-        }
-    }
-
     public void OnJump()
     {
-        if (CharCon.isGrounded)
+        if (CharCon.isGrounded && !stopMoving)
         {
             verticalVelocity = jumpForce;
-
-            if (anim != null)
-            {
-                anim.SetTrigger("Jump");
-            }
+            if (anim != null) anim.SetTrigger("Jump");
         }
-
-
     }
 
     private void HandleInteractionUI()
     {
         if (interactUI != null)
         {
-            // * NUEVO — currentCharacterInNeed agregado a la prioridad visual *
-            if (currentLevelNode != null)
-            {
-                interactUI.SetActive(true);
-            }
-            else if (currentCharacterInNeed != null)  // * NUEVO *
-            {
-                interactUI.SetActive(true);
-            }
-            else if (currentFlowerPot != null)
-            {
-                interactUI.SetActive(true);
-            }
-            else if (currentWaterSource != null)
-            {
-                interactUI.SetActive(true);
-            }
-            else
-            {
-                interactUI.SetActive(false);
-            }
+            bool showUI = (currentLevelNode != null || currentCharacterInNeed != null ||
+                           currentFlowerPot != null || currentWaterSource != null);
+            interactUI.SetActive(showUI);
         }
     }
 }
