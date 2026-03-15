@@ -22,14 +22,14 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: GM-Grid-05-URP
   m_Shader: {fileID: -6465566751694194690, guid: b4bb8b5c4862a416fa38d705dedc4d96, type: 3}
-  m_Parent: {fileID: 0}
+  m_Parent: {fileID: 2100000, guid: 304daaf7596164fb8b56c3b012327f24, type: 2}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _BLEND_MODE_SCREEN
   - _COORDINATES_OBJECT
   m_InvalidKeywords:
   - _EMISSION
-  m_LightmapFlags: 2
+  m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -48,14 +48,6 @@ Material:
         m_Texture: {fileID: 2800000, guid: 3caf7d008b0124c71a072740ac78c491, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _Emission_Map:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _Emission_Texture:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 3caf7d008b0124c71a072740ac78c491, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -72,14 +64,6 @@ Material:
         m_Texture: {fileID: 2800000, guid: bfd887a03685a4ae5a0544ff6dc60dcd, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _SampleTexture2D_4d14e7594c4941fb83ff05a960a13fde_Texture_1_Texture2D:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _SampleTexture2D_96d6ebd61df345c9be42672934c1a91c_Texture_1_Texture2D:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _Side_Texture:
         m_Texture: {fileID: 2800000, guid: 3caf7d008b0124c71a072740ac78c491, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -92,68 +76,21 @@ Material:
         m_Texture: {fileID: 2800000, guid: 3caf7d008b0124c71a072740ac78c491, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _BLEND_MODE: 3
-    - _BUILTIN_QueueControl: -1
-    - _BUILTIN_QueueOffset: 0
     - _Base_Map_Multiplier: 2.48
     - _Base_Multiply: 0
     - _Base_Tiling: 2
-    - _Blend: 0
-    - _BlendModePreserveSpecular: 1
-    - _Blend_Opacity: 1
-    - _COORDINATES: 0
-    - _CastShadows: 1
-    - _Cull: 2
-    - _Dirt: 0
-    - _Dirt_Blend: 0.5
-    - _Dirt_Height: 0.5
-    - _DstBlend: 0
     - _Edge_Sharpness: 100
-    - _Emission: 0
-    - _Emission_Map_Multiplier: 1
-    - _Emission_Tiling: 1
     - _Metallic: 1
-    - _Metallic_Map_Multiplier: 1
-    - _Metallic_Tiling: 1
-    - _QueueControl: 0
-    - _QueueOffset: 0
-    - _ReceiveShadows: 1
-    - _Smoothness: 0
-    - _SrcBlend: 1
-    - _Surface: 0
     - _Tiling: 2
-    - _WorkflowMode: 1
-    - _ZTest: 4
-    - _ZWrite: 1
-    - _ZWriteControl: 0
     m_Colors:
     - _Base_Color: {r: 0.30980393, g: 0.26666668, b: 0.92156863, a: 1}
     - _Base_Color_Sides: {r: 0.33094516, g: 0.3422648, b: 0.3490566, a: 0}
     - _Base_Color_Top: {r: 1, g: 0.627451, b: 0, a: 1}
-    - _Dirt_Color: {r: 0.18592346, g: 0.07008722, b: 0.33018863, a: 0}
-    - _Emission_Color: {r: 0, g: 0, b: 0, a: 0}
     - _Side_Color: {r: 0.3490566, g: 0.3490566, b: 0.3490566, a: 0}
-    - _Side_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Sides_Color: {r: 0.32941177, g: 0.34117648, b: 0.34901962, a: 0}
-    - _Sides_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Top_Color: {r: 0.8396226, g: 0.52829754, b: 0.0039604935, a: 1}
-    - _Top_Offset: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &8590889702701517785
