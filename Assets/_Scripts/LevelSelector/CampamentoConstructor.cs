@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 public class CampamentoConstructor : MonoBehaviour
 {
@@ -9,8 +10,11 @@ public class CampamentoConstructor : MonoBehaviour
     public int precioSoles = 50;
     public float radioDeActivacion = 2.5f;
 
-    [Header("Interaccion UI (Tecla E)")]
+    [Header("Interaccion UI Visual")]
     public GameObject panelTeclaE;
+    public Sprite spriteTeclado;
+    public Sprite spriteMando;
+
     public KeyCode teclaAccion = KeyCode.E;
 
     [Header("Animacion Tecla (Smooth)")]
@@ -53,9 +57,17 @@ public class CampamentoConstructor : MonoBehaviour
     private float fovOriginal;
     private Canvas canvasMundo;
 
+    private SpriteRenderer sr;
+    private Image img;
+
+    // Variable estática para que todas las carpas sepan qué se usó por última vez
+    private static bool usandoMando = false;
+
     void Start()
     {
-        // 1. RESET PARA TESTEO
+        // Suscribirse al evento de cambio de dispositivo
+        InputSystem.onActionChange += OnActionChange;
+
         if (resetearEnStart)
         {
             PlayerPrefs.DeleteKey(idEstructura);
@@ -64,7 +76,6 @@ public class CampamentoConstructor : MonoBehaviour
 
         yaConstruido = PlayerPrefs.GetInt(idEstructura, 0) == 1;
 
-        // 2. CONFIGURACIÓN INICIAL
         if (camaraJuego == null) camaraJuego = Camera.main;
         if (camaraJuego != null) fovOriginal = camaraJuego.fieldOfView;
 
@@ -74,14 +85,41 @@ public class CampamentoConstructor : MonoBehaviour
             if (canvasMundo != null) canvasMundo.gameObject.SetActive(false);
         }
 
-        // Guardar posición inicial para la animación de flotado
         if (panelTeclaE != null)
         {
             posInicialTecla = panelTeclaE.transform.localPosition;
             panelTeclaE.SetActive(false);
+
+            sr = panelTeclaE.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = panelTeclaE.GetComponentInChildren<SpriteRenderer>();
+
+            img = panelTeclaE.GetComponent<Image>();
+            if (img == null) img = panelTeclaE.GetComponentInChildren<Image>();
         }
 
         ActualizarVisuales();
+        ActualizarIconoInput(); // Carga inicial
+    }
+
+    private void OnDestroy()
+    {
+        // Limpiar la suscripción al destruir el objeto
+        InputSystem.onActionChange -= OnActionChange;
+    }
+
+    // Esta función detecta qué dispositivo se tocó por última vez
+    private void OnActionChange(object obj, InputActionChange change)
+    {
+        if (change == InputActionChange.ActionStarted)
+        {
+            var action = (InputAction)obj;
+            if (action.activeControl != null)
+            {
+                var device = action.activeControl.device;
+                usandoMando = device is Gamepad;
+                ActualizarIconoInput();
+            }
+        }
     }
 
     void Update()
@@ -100,7 +138,12 @@ public class CampamentoConstructor : MonoBehaviour
         if (distancia <= radioDeActivacion)
         {
             GestionarIndicadorE(true);
-            if (Input.GetKeyDown(teclaAccion)) IniciarProceso();
+
+            bool presionoInteractuar = false;
+            if (Input.GetKeyDown(teclaAccion)) presionoInteractuar = true;
+            if (Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame) presionoInteractuar = true;
+
+            if (presionoInteractuar) IniciarProceso();
         }
         else
         {
@@ -108,6 +151,15 @@ public class CampamentoConstructor : MonoBehaviour
         }
     }
 
+    void ActualizarIconoInput()
+    {
+        Sprite spriteAUsar = usandoMando ? spriteMando : spriteTeclado;
+        if (spriteAUsar == null) return;
+        if (sr != null) sr.sprite = spriteAUsar;
+        if (img != null) img.sprite = spriteAUsar;
+    }
+
+    // --- EL RESTO DEL CÓDIGO SE MANTIENE EXACTAMENTE IGUAL ---
     void BuscarJugador()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -119,14 +171,10 @@ public class CampamentoConstructor : MonoBehaviour
         if (panelTeclaE != null)
         {
             if (panelTeclaE.activeSelf != estado) panelTeclaE.SetActive(estado);
-
             if (estado)
             {
-                // Billboarding: Siempre mira a cámara
                 if (camaraJuego != null)
                     panelTeclaE.transform.LookAt(panelTeclaE.transform.position + camaraJuego.transform.forward);
-
-                // Animación de flotado Smooth
                 float nuevoY = posInicialTecla.y + Mathf.Sin(Time.time * velocidadFlotado) * amplitudFlotado;
                 panelTeclaE.transform.localPosition = new Vector3(posInicialTecla.x, nuevoY, posInicialTecla.z);
             }
@@ -145,25 +193,19 @@ public class CampamentoConstructor : MonoBehaviour
         enSecuencia = true;
         if (panelTeclaE != null) panelTeclaE.SetActive(false);
         LevelSelectorPlayer.puedeMoversis = false;
-
-        // 1. DESPLAZAMIENTO
         while (true)
         {
             Vector3 posJugador = new Vector3(jugador.position.x, 0, jugador.position.z);
             Vector3 posDestino = new Vector3(puntoCaminar.position.x, 0, puntoCaminar.position.z);
             if (Vector3.Distance(posJugador, posDestino) <= 0.4f) break;
-
             Vector3 direccion = (posDestino - posJugador).normalized;
             if (direccion != Vector3.zero)
                 jugador.rotation = Quaternion.Slerp(jugador.rotation, Quaternion.LookRotation(direccion), 15f * Time.deltaTime);
-
             controller.Move(direccion * velocidadCaminar * Time.deltaTime);
             if (camaraJuego != null)
                 camaraJuego.fieldOfView = Mathf.Lerp(camaraJuego.fieldOfView, zoomFOV, 5f * Time.deltaTime);
             yield return null;
         }
-
-        // 2. GIRO HACIA EL EDIFICIO
         Vector3 dirHaciaCarpa = (new Vector3(transform.position.x, 0, transform.position.z) -
                                  new Vector3(jugador.position.x, 0, jugador.position.z)).normalized;
         if (dirHaciaCarpa != Vector3.zero)
@@ -175,8 +217,6 @@ public class CampamentoConstructor : MonoBehaviour
                 yield return null;
             }
         }
-
-        // 3. BARRA DE CARGA
         if (barraProgreso != null && canvasMundo != null)
         {
             canvasMundo.gameObject.SetActive(true);
@@ -189,21 +229,15 @@ public class CampamentoConstructor : MonoBehaviour
             }
             canvasMundo.gameObject.SetActive(false);
         }
-
-        // 4. GENERACIÓN
         PlayerPrefs.SetInt("TotalCoins", PlayerPrefs.GetInt("TotalCoins") - precioSoles);
         PlayerPrefs.SetInt(idEstructura, 1);
         PlayerPrefs.Save();
         yaConstruido = true;
         ActualizarVisuales();
-
         if (particulasPolvoBase != null) particulasPolvoBase.Play();
         if (audioConstruccion != null) { audioConstruccion.pitch = Random.Range(0.9f, 1.1f); audioConstruccion.Play(); }
         if (modeloCarpa != null) StartCoroutine(EfectoReboteImpacto(modeloCarpa.transform));
-
         yield return new WaitForSeconds(pausaEnfoqueFinal);
-
-        // 5. ZOOM OUT
         float tZoom = 0;
         while (tZoom < 1f)
         {
@@ -211,7 +245,6 @@ public class CampamentoConstructor : MonoBehaviour
             if (camaraJuego != null) camaraJuego.fieldOfView = Mathf.Lerp(zoomFOV, fovOriginal, tZoom);
             yield return null;
         }
-
         LevelSelectorPlayer.puedeMoversis = true;
         enSecuencia = false;
     }

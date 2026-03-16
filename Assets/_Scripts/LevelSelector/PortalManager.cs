@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
-using UnityEngine.InputSystem; // Necesario para el nuevo Input System
+using UnityEngine.InputSystem;
 
 public class PortalManager : MonoBehaviour
 {
@@ -22,31 +22,32 @@ public class PortalManager : MonoBehaviour
     public CanvasGroup fadeGroup;
     public MonoBehaviour scriptMovimientoJugador;
 
-    // --- NUEVAS VARIABLES DE INTERACCIÓN ---
-    private PlayerInput inputActions;
+    // --- VARIABLES DE INTERACCIÓN ---
+    private PlayerInput inputActions; // Clase generada por el Input System
     private bool jugadorEstaCerca = false;
     private GameObject jugador;
     private bool puedeUsarPortal = true;
 
     void Awake()
     {
-        // Inicializamos el mapa de controles generado (PlayerInput.cs)
+        // Instanciamos la clase de acciones generada
         inputActions = new PlayerInput();
     }
 
     void OnEnable()
     {
-        // Activamos el mapa de acciones "Gameplay"
-        inputActions.Gameplay.Enable();
+        // Activamos el mapa "Player" (el que configuramos ayer)
+        inputActions.Player.Enable();
 
-        // Suscribimos el botón de "Interact" (Espacio/Mando)
-        // Cuando se presione, ejecutará la función IntentarEntrar
-        inputActions.Gameplay.Interact.performed += ctx => IntentarEntrarAlNivel();
+        // Suscribimos la acción "Interact" para que ejecute la entrada al nivel
+        inputActions.Player.Interact.performed += OnInteractPerformed;
     }
 
     void OnDisable()
     {
-        inputActions.Gameplay.Disable();
+        // Limpieza de suscripciones y desactivación
+        inputActions.Player.Interact.performed -= OnInteractPerformed;
+        inputActions.Player.Disable();
     }
 
     void Start()
@@ -54,15 +55,16 @@ public class PortalManager : MonoBehaviour
         jugador = GameObject.FindGameObjectWithTag("Player");
         string key = "NivelCompletado_" + portalID;
 
+        // Reset de progreso para pruebas
         if (resetearEnStart)
         {
             PlayerPrefs.DeleteKey(key);
             PlayerPrefs.Save();
         }
 
+        // Cargar estado de la bandera (0: Bloqueado, 1: Recién completado, 2: Ya completado)
         int estado = PlayerPrefs.GetInt(key, 0);
 
-        // Forzado de estado visual inicial (Anti-glitch)
         if (estado == 0 || estado == 1)
         {
             soporteBandera.localScale = new Vector3(1, 0, 1);
@@ -74,6 +76,7 @@ public class PortalManager : MonoBehaviour
             bandera.SetActive(true);
         }
 
+        // Si venimos de completar el nivel, activamos la secuencia de la bandera
         if (estado == 1)
         {
             StartCoroutine(SecuenciaRetorno(key));
@@ -84,15 +87,14 @@ public class PortalManager : MonoBehaviour
         }
     }
 
-    // --- LÓGICA DE DETECCIÓN ---
+    // --- DETECCIÓN POR TRIGGER ---
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && puedeUsarPortal)
         {
             jugadorEstaCerca = true;
-            Debug.Log("Jugador en zona del portal " + portalID + ". Presiona ESPACIO.");
-            // NOTA: Aquí activaremos el Panel de Info (Estrellas/Foto) en el siguiente paso.
+            Debug.Log($"[Portal {portalID}] Cerca. Pulsa el botón de interacción.");
         }
     }
 
@@ -101,13 +103,12 @@ public class PortalManager : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             jugadorEstaCerca = false;
-            Debug.Log("Jugador salió de la zona.");
-            // NOTA: Aquí ocultaremos el Panel de Info en el siguiente paso.
         }
     }
 
-    // Función que llama el Input System
-    private void IntentarEntrarAlNivel()
+    // --- LÓGICA DE INTERACCIÓN ---
+
+    private void OnInteractPerformed(InputAction.CallbackContext context)
     {
         if (jugadorEstaCerca && puedeUsarPortal)
         {
@@ -115,12 +116,15 @@ public class PortalManager : MonoBehaviour
         }
     }
 
-    // --- CORRUTINAS DE TRANSICIÓN ---
-
     IEnumerator IrAlNivel()
     {
         puedeUsarPortal = false;
+
+        // Desactivar movimiento del jugador para evitar que se mueva durante el fade
+        if (scriptMovimientoJugador != null) scriptMovimientoJugador.enabled = false;
+
         if (fadeGroup != null) yield return StartCoroutine(Fade(1, 0.5f));
+
         SceneManager.LoadScene(nombreEscena);
     }
 
@@ -128,16 +132,19 @@ public class PortalManager : MonoBehaviour
     {
         puedeUsarPortal = false;
 
+        // Bloqueo total de controles
         if (scriptMovimientoJugador != null) scriptMovimientoJugador.enabled = false;
         CharacterController cc = jugador.GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
 
         if (fadeGroup != null) fadeGroup.alpha = 1;
 
+        // Posicionar al jugador en el punto de observación
         Vector3 posFinal = puntoObservacion.position;
         posFinal.y += offsetEnY;
         jugador.transform.position = posFinal;
 
+        // Orientar al jugador hacia la bandera
         Vector3 dir = (soporteBandera.position - jugador.transform.position);
         dir.y = 0;
         if (dir != Vector3.zero) jugador.transform.rotation = Quaternion.LookRotation(dir);
@@ -147,6 +154,7 @@ public class PortalManager : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         if (fadeGroup != null) yield return StartCoroutine(Fade(0, 0.8f));
 
+        // Animación de escala de la bandera (el soporte sube)
         float elapsed = 0;
         while (elapsed < 1.5f)
         {
@@ -157,13 +165,15 @@ public class PortalManager : MonoBehaviour
         soporteBandera.localScale = Vector3.one;
         bandera.SetActive(true);
 
+        // Guardar progreso definitivo
         PlayerPrefs.SetInt(key, 2);
         PlayerPrefs.Save();
 
+        // Reactivar controles
         if (cc != null) cc.enabled = true;
         if (scriptMovimientoJugador != null) scriptMovimientoJugador.enabled = true;
 
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(1.0f);
         puedeUsarPortal = true;
     }
 

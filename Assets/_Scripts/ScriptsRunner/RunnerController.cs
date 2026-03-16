@@ -1,10 +1,12 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.InputSystem; // Asegúrate de que esta línea esté presente
 
 [RequireComponent(typeof(CharacterController))]
 public class RunnerController : MonoBehaviour
 {
+    // ... (Mantenemos todas tus variables de cabecera exactamente igual) ...
     [Header("Movimiento y Progresión")]
     public float initialSpeed = 12f;
     public float maxSpeed = 30f;
@@ -79,8 +81,6 @@ public class RunnerController : MonoBehaviour
 
     void Update()
     {
-
-
         float frameDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
                                                new Vector3(lastPosition.x, 0, lastPosition.z));
         distanceTraveled += frameDistance;
@@ -95,42 +95,68 @@ public class RunnerController : MonoBehaviour
         if (SessionManager.Instance != null)
             SessionManager.Instance.SetDistance(distanceTraveled);
 
-        HandleInputs();
         HandleAbilityTimer();
         MovePlayer();
 
         if (transform.position.y < -5f) Die();
     }
 
-    void HandleInputs()
-    {
-        if (Input.GetKeyDown(KeyCode.A)) MoveLane(false);
-        if (Input.GetKeyDown(KeyCode.D)) MoveLane(true);
+    // --- MÉTODOS PÚBLICOS PARA EL PLAYER INPUT ---
 
-        if (Input.GetButtonDown("Jump"))
+    // Este maneja Stick Izquierdo y Flechas (D-Pad)
+    public void OnMoveInput(InputAction.CallbackContext context)
+    {
+        if (context.started) // Solo detectamos el primer pulso para cambiar de carril
+        {
+            Vector2 input = context.ReadValue<Vector2>();
+
+            // Movimiento lateral (Stick o Flechas Izquierda/Derecha)
+            if (input.x > 0.5f) MoveLane(true);
+            else if (input.x < -0.5f) MoveLane(false);
+
+            // Agachado rápido desde el Stick (Hacia abajo)
+            if (input.y < -0.5f)
+            {
+                if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
+                StartSlide();
+            }
+        }
+
+        // Si soltamos el Stick/Flecha hacia abajo, dejamos de deslizarnos
+        if (context.canceled)
+        {
+            Vector2 input = context.ReadValue<Vector2>();
+            if (input.y > -0.5f) StopSlide();
+        }
+    }
+
+    // Este maneja el botón Sur (X en PlayStation / A en Xbox)
+    public void OnJumpInput(InputAction.CallbackContext context)
+    {
+        if (context.started)
         {
             if (controller.isGrounded)
                 verticalVelocity = jumpForce;
             else if (isWallRunning)
                 ExecuteWallJump();
         }
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            if (!isAmbulanceMode)
-            {
-                if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
-                StartSlide();
-            }
-            else
-            {
-                if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
-            }
-        }
-
-        if (Input.GetKeyUp(KeyCode.S)) StopSlide();
     }
 
+    // Este maneja el botón Oeste (Cuadrado / X) o cualquier otro que definas
+    public void OnActionInput(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            if (!controller.isGrounded && !isWallRunning) verticalVelocity = fastFallSpeed;
+            StartSlide();
+        }
+        else if (context.canceled)
+        {
+            StopSlide();
+        }
+    }
+
+    // --- EL RESTO DE TU LÓGICA (MovePlayer, Die, etc.) SE MANTIENE IGUAL ---
     void MovePlayer()
     {
         Vector3 offsetFromPivot = transform.position - pivotPoint;
@@ -264,9 +290,6 @@ public class RunnerController : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("TurnTrigger")) isInTurnTrigger = true;
-
-        // RECOGER POWERUP: Solo si es el cuerpo del jugador (no el sensor largo)
-        // Usamos Vector3.Distance para asegurar que el jugador esté cerca y no sea el sensor
         if (other.CompareTag("PowerUp"))
         {
             float dist = Vector3.Distance(transform.position, other.transform.position);
@@ -276,7 +299,6 @@ public class RunnerController : MonoBehaviour
                 Destroy(other.gameObject);
             }
         }
-
         if (other.CompareTag("WaterSlide"))
         {
             isSlidingOnWater = true;
@@ -284,24 +306,18 @@ public class RunnerController : MonoBehaviour
         }
     }
 
-    // DETECCIÓN DEL SENSOR PARA EL FUEGO (CON FILTROS)
     private void OnTriggerStay(Collider other)
     {
-        // FILTRO DOBLE: Tag "FireWall" Y Layer "Fire"
         if (isSlidingOnWater && other.CompareTag("FireWall") && other.gameObject.layer == LayerMask.NameToLayer("Fire"))
         {
             FireBehavior fire = other.GetComponent<FireBehavior>();
-            if (fire != null)
-            {
-                fire.StartExtinguishing();
-            }
+            if (fire != null) fire.StartExtinguishing();
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("TurnTrigger")) isInTurnTrigger = false;
-
         if (other.CompareTag("WaterSlide"))
         {
             isSlidingOnWater = false;
