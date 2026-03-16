@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Esto soluciona el error CS1061 al diferenciar el componente de tu clase generada
+// Alias para evitar conflictos con la clase generada de Unity
 using UnityPlayerInput = UnityEngine.InputSystem.PlayerInput;
 
 public class PlayerController : MonoBehaviour
@@ -9,156 +9,136 @@ public class PlayerController : MonoBehaviour
     public static PlayerController instance;
 
     [Header("Sistemas del Jugador")]
-    public PlayerWater playerWater;
+    public PlayerWater playerWater; // Restaurado
     public Animator anim;
 
     [Header("Configuración de Movimiento")]
     public float moveSpeed = 5f;
+    public float sprintMultiplier = 1.6f;
     public float rotationSpeed = 10f;
     public float jumpForce = 7f;
     private float characterGravity = -20f;
 
-    [Header("Referencias de Escena")]
+    [Header("Referencias de Modelo")]
     public Transform model;
-    public GameObject interactUI;
 
-    // Componentes internos
-    private CharacterController CharCon;
-    private UnityPlayerInput playerInputComponent; // Usamos el alias para evitar conflictos
-    private CameraController cam;
-
-    // Variables de estado y física
-    private Vector2 inputM;
-    private Vector3 inputVector;
-    private Vector3 movementVector;
-    private float verticalVelocity;
-
+    // --- VARIABLES DE ESTADO (Requeridas por tus otros scripts) ---
     [HideInInspector] public bool stopMoving;
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
     [HideInInspector] public CharacterInNeed currentCharacterInNeed;
 
-    public void Awake()
-    {
-        // Obtenemos el componente usando el alias definido arriba
-        playerInputComponent = GetComponent<UnityPlayerInput>();
-        CharCon = GetComponent<CharacterController>();
-        cam = FindFirstObjectByType<CameraController>();
+    // Componentes internos
+    private CharacterController CharCon;
+    private UnityPlayerInput playerInputComponent;
+    private Vector2 inputM;
+    private Vector3 movementVector;
+    private float verticalVelocity;
+    private bool isSprinting;
 
-        if (instance != null && instance != this)
-        {
-            Destroy(this.gameObject);
-            return;
-        }
+    void Awake()
+    {
+        if (instance != null && instance != this) { Destroy(gameObject); return; }
         instance = this;
 
-        if (playerWater == null)
-            playerWater = GetComponent<PlayerWater>();
+        CharCon = GetComponent<CharacterController>();
+        playerInputComponent = GetComponent<UnityPlayerInput>();
+
+        if (playerWater == null) playerWater = GetComponent<PlayerWater>();
     }
 
     void Update()
     {
         if (stopMoving)
         {
-            if (interactUI != null) interactUI.SetActive(false);
             if (anim != null) anim.SetFloat("Speed", 0f);
+            ApplyGravity();
             return;
         }
 
-        GetInput();
+        HandleInputs();
         ApplyMovement();
         RotateModel();
-        HandleInteractionUI();
-
-        if (anim != null)
-        {
-            anim.SetFloat("Speed", inputM.magnitude, 0.1f, Time.deltaTime);
-            anim.SetBool("IsGrounded", CharCon.isGrounded);
-        }
+        UpdateAnimations();
     }
 
-    public void GetInput()
+    private void HandleInputs()
     {
-        // Acceso seguro a las acciones del Asset configurado en el Inspector
-        if (playerInputComponent != null && playerInputComponent.actions != null)
-        {
-            inputM = playerInputComponent.actions["Move"].ReadValue<Vector2>();
-        }
+        // Lectura de los nuevos botones que configuramos
+        inputM = playerInputComponent.actions["Move"].ReadValue<Vector2>();
+        isSprinting = playerInputComponent.actions["Sprint"].ReadValue<float>() > 0.1f;
 
-        if (cam != null)
-        {
-            Vector3 camForward = cam.transform.forward;
-            Vector3 camRight = cam.transform.right;
-            camForward.y = 0;
-            camRight.y = 0;
-            camForward.Normalize();
-            camRight.Normalize();
+        ApplyGravity();
+    }
 
-            inputVector = camRight * inputM.x + camForward * inputM.y;
-        }
-
+    private void ApplyGravity()
+    {
         if (CharCon.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
         verticalVelocity += characterGravity * Time.deltaTime;
+    }
 
-        movementVector = inputVector * moveSpeed;
+    private void ApplyMovement()
+    {
+        float speed = isSprinting ? moveSpeed * sprintMultiplier : moveSpeed;
+
+        // Movimiento relativo al mundo (puedes ajustarlo a la cámara luego)
+        Vector3 moveDir = new Vector3(inputM.x, 0, inputM.y);
+        movementVector = moveDir * speed;
         movementVector.y = verticalVelocity;
+
+        if (CharCon != null) CharCon.Move(movementVector * Time.deltaTime);
     }
 
-    void RotateModel()
+    private void RotateModel()
     {
-        Vector3 flatMove = new Vector3(inputVector.x, 0, inputVector.z);
-        if (flatMove.sqrMagnitude > 0.001f)
+        Vector3 direction = new Vector3(movementVector.x, 0, movementVector.z);
+        if (direction.sqrMagnitude > 0.01f && model != null)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(flatMove);
-            model.rotation = Quaternion.Slerp(model.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            Quaternion targetRot = Quaternion.LookRotation(direction);
+            model.rotation = Quaternion.Slerp(model.rotation, targetRot, rotationSpeed * Time.deltaTime);
         }
     }
 
-    public void ApplyMovement()
+    private void UpdateAnimations()
     {
-        if (CharCon != null)
+        if (anim != null)
         {
-            CharCon.Move(movementVector * Time.deltaTime);
+            anim.SetFloat("Speed", inputM.magnitude);
+            anim.SetBool("IsGrounded", CharCon.isGrounded);
         }
     }
 
-    // Vincula estos métodos en los Unity Events del componente Player Input del inspector
-    public void OnSelect()
+    // --- VINCULACIÓN DE EVENTOS PARA EL MANDO ---
+
+    public void OnJump(InputAction.CallbackContext context)
     {
-        if (stopMoving) return;
-
-        if (currentLevelNode != null)
-        {
-            currentLevelNode.LoadLevel();
-            return;
-        }
-
-        if (currentCharacterInNeed != null)
-        {
-            currentCharacterInNeed.TryDeliverKit();
-            return;
-        }
-    }
-
-    public void OnJump()
-    {
-        if (CharCon.isGrounded && !stopMoving)
+        if (context.performed && CharCon.isGrounded && !stopMoving)
         {
             verticalVelocity = jumpForce;
             if (anim != null) anim.SetTrigger("Jump");
         }
     }
 
-    private void HandleInteractionUI()
+    public void OnInteract(InputAction.CallbackContext context)
     {
-        if (interactUI != null)
+        // Esta es tu antigua tecla "E" o "Triángulo"
+        if (context.performed && !stopMoving)
         {
-            bool showUI = (currentLevelNode != null || currentCharacterInNeed != null ||
-                           currentFlowerPot != null || currentWaterSource != null);
-            interactUI.SetActive(showUI);
+            if (currentLevelNode != null) currentLevelNode.LoadLevel();
+            if (currentCharacterInNeed != null) currentCharacterInNeed.TryDeliverKit();
+        }
+    }
+
+    public void OnAction(InputAction.CallbackContext context)
+    {
+        // Esta es tu antigua tecla "V" o "Cuadrado"
+        if (context.performed && !stopMoving)
+        {
+            // Aquí puedes llamar a funciones de recolección de PlayerWater si las tenías
+            Debug.Log("Acción ejecutada: Recoger/Usar");
         }
     }
 }

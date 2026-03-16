@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class LevelSelectorPlayer : MonoBehaviour
@@ -8,7 +9,6 @@ public class LevelSelectorPlayer : MonoBehaviour
     public float rotationSpeed = 15f;
     public float gravity = -20f;
 
-    // VARIABLE PARA BLOQUEO EXTERNO (Usada por CampamentoConstructor)
     public static bool puedeMoversis = true;
 
     [Header("Skins e Inventario")]
@@ -18,52 +18,58 @@ public class LevelSelectorPlayer : MonoBehaviour
     private bool isUsingMoto = false;
 
     [Header("Animacion")]
-    [Tooltip("Arrastra aqui el componente Animator del modelo del personaje")]
     public Animator animator;
-    [Tooltip("Nombre exacto del parametro (Float) en el Animator (ej: Speed)")]
     public string parametroVelocidad = "Speed";
 
     private CharacterController controller;
     private Vector3 velocity;
+    private Vector2 inputMovimiento;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
         puedeMoversis = true;
-
-        // Si no asignaste el Animator manualmente, intentamos buscarlo en los hijos
         if (animator == null) animator = GetComponentInChildren<Animator>();
-
-        // Estado inicial de las skins
         if (normalSkin) normalSkin.SetActive(true);
         if (motoSkin) motoSkin.SetActive(false);
+    }
+
+    public void OnMove(InputValue value)
+    {
+        inputMovimiento = value.Get<Vector2>();
+    }
+
+    // Acción para el mando (Configurada en el Input Action Asset)
+    public void OnAction(InputValue value)
+    {
+        if (value.isPressed && hasMoto && puedeMoversis)
+        {
+            ToggleMoto();
+        }
     }
 
     private void Update()
     {
         if (puedeMoversis)
         {
-            MoverPersonaje();
-
-            if (Input.GetKeyDown(KeyCode.Alpha1) && hasMoto)
+            // DETECCIÓN ADICIONAL PARA TECLADO (Tecla 1)
+            if (Keyboard.current != null && Keyboard.current.digit1Key.wasPressedThisFrame && hasMoto)
             {
                 ToggleMoto();
             }
+
+            MoverPersonaje();
         }
         else
         {
             AplicarGravedadSolo();
-            // Si el movimiento esta bloqueado, forzamos la animacion a 0 (Idle)
             ActualizarAnimacion(0f);
         }
     }
 
     private void MoverPersonaje()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-
-        Vector3 moveDirection = new Vector3(horizontal, 0f, vertical).normalized;
+        Vector3 moveDirection = new Vector3(inputMovimiento.x, 0f, inputMovimiento.y).normalized;
 
         if (controller.isGrounded && velocity.y < 0)
         {
@@ -76,13 +82,10 @@ public class LevelSelectorPlayer : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             controller.Move(moveDirection * moveSpeed * Time.deltaTime);
-
-            // Enviamos la magnitud del movimiento al Animator
             ActualizarAnimacion(moveDirection.magnitude);
         }
         else
         {
-            // No hay input, enviamos 0 para volver a Idle
             ActualizarAnimacion(0f);
         }
 
@@ -91,19 +94,12 @@ public class LevelSelectorPlayer : MonoBehaviour
 
     private void ActualizarAnimacion(float valor)
     {
-        if (animator != null)
-        {
-            // Usamos un Float para que el Animator decida entre caminar/correr segun la velocidad
-            animator.SetFloat(parametroVelocidad, valor);
-        }
+        if (animator != null) animator.SetFloat(parametroVelocidad, valor);
     }
 
     private void AplicarGravedadSolo()
     {
-        if (controller.isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
+        if (controller.isGrounded && velocity.y < 0) velocity.y = -2f;
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
@@ -111,15 +107,13 @@ public class LevelSelectorPlayer : MonoBehaviour
     private void ToggleMoto()
     {
         isUsingMoto = !isUsingMoto;
-
         if (normalSkin) normalSkin.SetActive(!isUsingMoto);
         if (motoSkin) motoSkin.SetActive(isUsingMoto);
-
         moveSpeed = isUsingMoto ? 15f : 8f;
 
-        // Al cambiar de skin, refrescamos la referencia del Animator si es necesario
-        // (Por si la moto tiene su propio Animator independiente)
+        // Refrescamos el animator para que tome el de la skin activa
         animator = GetComponentInChildren<Animator>();
+        Debug.Log(isUsingMoto ? "Moto equipada" : "Caminando");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -127,7 +121,7 @@ public class LevelSelectorPlayer : MonoBehaviour
         if (other.CompareTag("Moto"))
         {
             hasMoto = true;
-            Debug.Log("Moto obtenida. Presiona 1 para usarla.");
+            Debug.Log("Moto obtenida. Tecla 1 o Cuadrado para usarla.");
             Destroy(other.gameObject);
         }
     }
