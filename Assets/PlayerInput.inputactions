@@ -59,15 +59,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "New action",
-                    "type": "Button",
-                    "id": "4a4a17ab-6b0a-4ae3-afc9-2d5c3b801e8c",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -125,17 +116,6 @@
                     "action": "Move",
                     "isComposite": false,
                     "isPartOfComposite": true
-                },
-                {
-                    "name": "",
-                    "id": "658cc2c5-54dd-4013-9a37-a3d21ce93350",
-                    "path": "<Gamepad>/leftStick",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": false
                 },
                 {
                     "name": "2D Vector",
@@ -271,6 +251,17 @@
                 },
                 {
                     "name": "",
+                    "id": "05fcda15-515c-4f62-b740-34ad959e6291",
+                    "path": "<Gamepad>/dpad/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "8c2aa273-fce9-4fc8-aaeb-dd5b34314bb0",
                     "path": "<Gamepad>/buttonNorth",
                     "interactions": "",
@@ -354,17 +345,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "Back",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "62b34ff8-347b-44aa-b871-513791e5c584",
-                    "path": "",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "New action",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
