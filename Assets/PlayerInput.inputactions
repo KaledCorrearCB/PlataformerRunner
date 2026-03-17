@@ -59,6 +59,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "HoldInteract",
+                    "type": "Button",
+                    "id": "28e6cfdf-d0b6-42b3-952e-caf253372884",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -345,6 +354,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Back",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e9d71563-5260-419d-a2c5-1141107eef58",
+                    "path": "<Keyboard>/e",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "",
+                    "action": "HoldInteract",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ea2f38c0-9ba3-4232-97df-ae598989729d",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "",
+                    "action": "HoldInteract",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
