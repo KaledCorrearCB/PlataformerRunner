@@ -13,6 +13,7 @@ TagManager:
   - Plataform
   - Moto
   - ObstaculoWobble
+  - TurnPoint
   layers:
   - Default
   - TransparentFX
@@ -22,7 +23,7 @@ TagManager:
   - UI
   - WallRun
   - Fire
-  - 
+  - TiggerGiro
   - 
   - 
   - 
