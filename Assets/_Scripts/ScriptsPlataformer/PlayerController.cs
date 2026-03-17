@@ -1,219 +1,144 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
+
+// Alias para evitar conflictos con la clase generada de Unity
+using UnityPlayerInput = UnityEngine.InputSystem.PlayerInput;
 
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController instance;
 
     [Header("Sistemas del Jugador")]
-    public PlayerWater playerWater;
+    public PlayerWater playerWater; // Restaurado
     public Animator anim;
 
     [Header("Configuración de Movimiento")]
     public float moveSpeed = 5f;
+    public float sprintMultiplier = 1.6f;
     public float rotationSpeed = 10f;
     public float jumpForce = 7f;
     private float characterGravity = -20f;
 
-    [Header("Referencias de Escena")]
+    [Header("Referencias de Modelo")]
     public Transform model;
-    public GameObject interactUI;
 
-    // Componentes internos
-    private CharacterController CharCon;
-    private PlayerInput playerInput;
-    private CameraController cam;
-
-    // Variables de estado y física
-    private Vector2 inputM;
-    private Vector3 inputVector;
-    private Vector3 movementVector;
-    private float verticalVelocity;
-
+    // --- VARIABLES DE ESTADO (Requeridas por tus otros scripts) ---
     [HideInInspector] public bool stopMoving;
     [HideInInspector] public LSEntry currentLevelNode;
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
-    [HideInInspector] public CharacterInNeed currentCharacterInNeed; // * NUEVO *
+    [HideInInspector] public CharacterInNeed currentCharacterInNeed;
 
-    public void Awake()
+    // Componentes internos
+    private CharacterController CharCon;
+    private UnityPlayerInput playerInputComponent;
+    private Vector2 inputM;
+    private Vector3 movementVector;
+    private float verticalVelocity;
+    private bool isSprinting;
+
+    void Awake()
     {
+        if (instance != null && instance != this) { Destroy(gameObject); return; }
+        instance = this;
 
-        Debug.Log(" Solo estoy aqui para ver si se arregla esta maricada");
-
-        playerInput = GetComponent<PlayerInput>();
         CharCon = GetComponent<CharacterController>();
-        cam = FindFirstObjectByType<CameraController>();
+        playerInputComponent = GetComponent<UnityPlayerInput>();
 
-        if (instance != null)
-        {
-            return;
-        }
-        else
-        {
-            instance = this;
-        }
-
-        if (playerWater == null)
-            playerWater = GetComponent<PlayerWater>();
+        if (playerWater == null) playerWater = GetComponent<PlayerWater>();
     }
 
     void Update()
     {
         if (stopMoving)
         {
-            if (interactUI != null) interactUI.SetActive(false);
-            // Si el jugador se detiene por lógica, ponemos la animación en 0
             if (anim != null) anim.SetFloat("Speed", 0f);
+            ApplyGravity();
             return;
         }
 
-        GetInput();
-        OnMove();
+        HandleInputs();
+        ApplyMovement();
         RotateModel();
-        HandleInteractionUI();
-
-        // *** ANIMACIÓN: Enviamos la magnitud del input al Blend Tree ***
-        // Usamos inputM.magnitude porque nos da un valor entre 0 y 1 
-        // ideal para el Blend Tree que configuramos antes.
-        if (anim != null)
-        {
-            anim.SetFloat("Speed", inputM.magnitude, 0.1f, Time.deltaTime);
-
-            anim.SetBool("IsGrounded", CharCon.isGrounded);
-        }
+        UpdateAnimations();
     }
 
-    public void GetInput()
+    private void HandleInputs()
     {
-        inputM = playerInput.actions["Move"].ReadValue<Vector2>();
+        // Lectura de los nuevos botones que configuramos
+        inputM = playerInputComponent.actions["Move"].ReadValue<Vector2>();
+        isSprinting = playerInputComponent.actions["Sprint"].ReadValue<float>() > 0.1f;
 
-        Vector3 camForward = cam.transform.forward;
-        Vector3 camRight = cam.transform.right;
-        camForward.y = 0;
-        camRight.y = 0;
-        camForward.Normalize();
-        camRight.Normalize();
+        ApplyGravity();
+    }
 
-        inputVector = camRight * inputM.x + camForward * inputM.y;
-
+    private void ApplyGravity()
+    {
         if (CharCon.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
         verticalVelocity += characterGravity * Time.deltaTime;
+    }
 
-        movementVector = inputVector * moveSpeed;
+    private void ApplyMovement()
+    {
+        float speed = isSprinting ? moveSpeed * sprintMultiplier : moveSpeed;
+
+        // Movimiento relativo al mundo (puedes ajustarlo a la cámara luego)
+        Vector3 moveDir = new Vector3(inputM.x, 0, inputM.y);
+        movementVector = moveDir * speed;
         movementVector.y = verticalVelocity;
+
+        if (CharCon != null) CharCon.Move(movementVector * Time.deltaTime);
     }
 
-    void RotateModel()
+    private void RotateModel()
     {
-        Vector3 flatMove = new Vector3(inputVector.x, 0, inputVector.z);
-        if (flatMove.sqrMagnitude > 0.001f)
+        Vector3 direction = new Vector3(movementVector.x, 0, movementVector.z);
+        if (direction.sqrMagnitude > 0.01f && model != null)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(flatMove);
-            model.rotation = Quaternion.Slerp(model.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            Quaternion targetRot = Quaternion.LookRotation(direction);
+            model.rotation = Quaternion.Slerp(model.rotation, targetRot, rotationSpeed * Time.deltaTime);
         }
     }
 
-    public void OnMove()
+    private void UpdateAnimations()
     {
-        CharCon.Move(movementVector * Time.deltaTime);
-    }
-
-    public void OnSelect()
-    {
-        Debug.Log("Select pressed");
-
-        // Prioridad 1: cargar nivel (igual que antes)
-        if (currentLevelNode != null && !stopMoving)
+        if (anim != null)
         {
-            Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
-            currentLevelNode.LoadLevel();
-            return;
-        }
-
-        // * NUEVO — Prioridad 2: entregar kit a personaje *
-        if (currentCharacterInNeed != null)
-        {
-            currentCharacterInNeed.TryDeliverKit();
-            return;
+            anim.SetFloat("Speed", inputM.magnitude);
+            anim.SetBool("IsGrounded", CharCon.isGrounded);
         }
     }
 
-    public void OnSelectHold(InputAction.CallbackContext context)
-    {
-        if (context.started)
-        {
-            Debug.Log($"Hold started — FlowerPot: {currentFlowerPot}, WaterSource: {currentWaterSource}");
-            if (currentFlowerPot != null)
-            {
-                currentFlowerPot.StartWatering();
-            }
-            else if (currentWaterSource != null)
-            {
-                currentWaterSource.StartAbsorbing(this);
-                if (playerWater != null)
-                    playerWater.StartAbsorbingWater(currentWaterSource.gameObject);
-            }
-        }
+    // --- VINCULACIÓN DE EVENTOS PARA EL MANDO ---
 
-        if (context.canceled)
-        {
-            if (currentFlowerPot != null)
-            {
-                currentFlowerPot.StopWatering();
-            }
-            else if (currentWaterSource != null)
-            {
-                currentWaterSource.StopAbsorbing(this);
-                if (playerWater != null)
-                    playerWater.StopAbsorbingWater();
-            }
-        }
-    }
-
-    public void OnJump()
+    public void OnJump(InputAction.CallbackContext context)
     {
-        if (CharCon.isGrounded)
+        if (context.performed && CharCon.isGrounded && !stopMoving)
         {
             verticalVelocity = jumpForce;
-
-            if (anim != null)
-            {
-                anim.SetTrigger("Jump");
-            }
+            if (anim != null) anim.SetTrigger("Jump");
         }
-
-
     }
 
-    private void HandleInteractionUI()
+    public void OnInteract(InputAction.CallbackContext context)
     {
-        if (interactUI != null)
+        // Esta es tu antigua tecla "E" o "Triángulo"
+        if (context.performed && !stopMoving)
         {
-            // * NUEVO — currentCharacterInNeed agregado a la prioridad visual *
-            if (currentLevelNode != null)
-            {
-                interactUI.SetActive(true);
-            }
-            else if (currentCharacterInNeed != null)  // * NUEVO *
-            {
-                interactUI.SetActive(true);
-            }
-            else if (currentFlowerPot != null)
-            {
-                interactUI.SetActive(true);
-            }
-            else if (currentWaterSource != null)
-            {
-                interactUI.SetActive(true);
-            }
-            else
-            {
-                interactUI.SetActive(false);
-            }
+            if (currentLevelNode != null) currentLevelNode.LoadLevel();
+            if (currentCharacterInNeed != null) currentCharacterInNeed.TryDeliverKit();
+        }
+    }
+
+    public void OnAction(InputAction.CallbackContext context)
+    {
+        // Esta es tu antigua tecla "V" o "Cuadrado"
+        if (context.performed && !stopMoving)
+        {
+            // Aquí puedes llamar a funciones de recolección de PlayerWater si las tenías
+            Debug.Log("Acción ejecutada: Recoger/Usar");
         }
     }
 }

@@ -6,7 +6,7 @@ public class MenuController : MonoBehaviour
     // Usamos el nombre exacto de tu archivo: LevelSelector
     public void OpenLevelSelector()
     {
-        SceneManager.LoadScene("PlatformBase");
+        SceneManager.LoadScene("LevelSelector");
     }
 
     public void ExitGame()

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class LevelSelectorPlayer : MonoBehaviour
@@ -8,98 +9,130 @@ public class LevelSelectorPlayer : MonoBehaviour
     public float rotationSpeed = 15f;
     public float gravity = -20f;
 
+    public static bool puedeMoversis = true;
+
     [Header("Skins e Inventario")]
     public GameObject normalSkin;
     public GameObject motoSkin;
     private bool hasMoto = false;
     private bool isUsingMoto = false;
 
+    [Header("Animacion")]
+    public Animator animator;
+    public string parametroVelocidad = "Speed";
+
     private CharacterController controller;
     private Vector3 velocity;
+    private Vector2 inputMovimiento;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-
-        // Estado inicial de las skins
+        puedeMoversis = true;
+        if (animator == null) animator = GetComponentInChildren<Animator>();
         if (normalSkin) normalSkin.SetActive(true);
         if (motoSkin) motoSkin.SetActive(false);
     }
 
-    private void Update()
+    public void OnMove(InputValue value)
     {
-        MoverPersonaje();
+        inputMovimiento = value.Get<Vector2>();
+    }
 
-        // Tecla 1 para cambiar de skin si ya tiene la moto en el inventario
-        if (Input.GetKeyDown(KeyCode.Alpha1) && hasMoto)
+    // Acción para el mando (Configurada en el Input Action Asset)
+    public void OnAction(InputValue value)
+    {
+        if (value.isPressed && hasMoto && puedeMoversis)
         {
             ToggleMoto();
         }
     }
 
+    private void Update()
+    {
+        if (puedeMoversis)
+        {
+            // DETECCIÓN ADICIONAL PARA TECLADO (Tecla 1)
+            if (Keyboard.current != null && Keyboard.current.digit1Key.wasPressedThisFrame && hasMoto)
+            {
+                ToggleMoto();
+            }
+
+            MoverPersonaje();
+        }
+        else
+        {
+            AplicarGravedadSolo();
+            ActualizarAnimacion(0f);
+        }
+    }
+
     private void MoverPersonaje()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 moveDirection = new Vector3(inputMovimiento.x, 0f, inputMovimiento.y).normalized;
 
-        // Movimiento relativo al mundo (isométrico)
-        Vector3 moveDirection = new Vector3(horizontal, 0f, vertical).normalized;
-
-        // Gravedad para no flotar en los cambios de relieve del mapa
         if (controller.isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
         }
         velocity.y += gravity * Time.deltaTime;
 
-        // Rotación y Traslación
         if (moveDirection.magnitude >= 0.1f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             controller.Move(moveDirection * moveSpeed * Time.deltaTime);
+            ActualizarAnimacion(moveDirection.magnitude);
+        }
+        else
+        {
+            ActualizarAnimacion(0f);
         }
 
-        // Aplicar la velocidad vertical (caída)
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void ActualizarAnimacion(float valor)
+    {
+        if (animator != null) animator.SetFloat(parametroVelocidad, valor);
+    }
+
+    private void AplicarGravedadSolo()
+    {
+        if (controller.isGrounded && velocity.y < 0) velocity.y = -2f;
+        velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
     private void ToggleMoto()
     {
         isUsingMoto = !isUsingMoto;
-
-        // Cambiamos visibilidad de los modelos hijos
         if (normalSkin) normalSkin.SetActive(!isUsingMoto);
         if (motoSkin) motoSkin.SetActive(isUsingMoto);
-
-        // Aumentar velocidad si usa la moto (ajusta el 15f a tu gusto)
         moveSpeed = isUsingMoto ? 15f : 8f;
+
+        // Refrescamos el animator para que tome el de la skin activa
+        animator = GetComponentInChildren<Animator>();
+        Debug.Log(isUsingMoto ? "Moto equipada" : "Caminando");
     }
 
-    // --- DETECCION DE TRIGGERS (Items) ---
     private void OnTriggerEnter(Collider other)
     {
-        // Detectar si tocamos el item de la moto para guardarlo en el inventario
         if (other.CompareTag("Moto"))
         {
             hasMoto = true;
-            Debug.Log("Moto obtenida. Presiona 1 para usarla.");
+            Debug.Log("Moto obtenida. Tecla 1 o Cuadrado para usarla.");
             Destroy(other.gameObject);
         }
     }
 
-    // --- INTERACCION JELLY (Choques con arbustos/arboles) ---
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        // Verificamos si el objeto que chocamos tiene el Tag que creamos para los arbustos
         if (hit.gameObject.CompareTag("ObstaculoWobble"))
         {
-            // Buscamos el script ProceduralWobble en el arbusto
             ProceduralWobble wobbler = hit.gameObject.GetComponent<ProceduralWobble>();
-
             if (wobbler != null)
             {
-                // Activamos el efecto de gelatina
                 wobbler.TriggerWobble();
             }
         }
