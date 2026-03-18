@@ -1119,6 +1119,10 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 970adab1-94da-487d-99ae-12deef116414
     m_ActionName: 'Player/Back[/Keyboard/escape]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 28e6cfdf-d0b6-42b3-952e-caf253372884
+    m_ActionName: 'Player/HoldInteract[/Keyboard/e]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -3664,8 +3668,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuUI
   totalCoinsText: {fileID: 1727924689}
   panelPrincipal: {fileID: 1167566063}
-  panelRecords: {fileID: 864111384}
-  panelShop: {fileID: 1641180815}
+  panelRecords: {fileID: 0}
+  panelShop: {fileID: 0}
 --- !u!4 &1787629287
 Transform:
   m_ObjectHideFlags: 0
