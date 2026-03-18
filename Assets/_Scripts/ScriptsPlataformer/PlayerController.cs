@@ -57,12 +57,9 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        // Singleton
-        if (instance != null && instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        this.enabled = true;
+        stopMoving = false;
+
         instance = this;
 
         charCon = GetComponent<CharacterController>();
@@ -71,10 +68,19 @@ public class PlayerController : MonoBehaviour
 
         if (playerWater == null)
             playerWater = GetComponent<PlayerWater>();
+
+        playerInputComponent.actions.FindActionMap("Player").Enable();
+
+        // 🔍 LOGS DE DIAGNÓSTICO
+        Debug.Log($"[PC Awake] enabled={this.enabled} | stopMoving={stopMoving}");
+        Debug.Log($"[PC Awake] CharCon={charCon} | PlayerInput={playerInputComponent} | Cam={cam}");
+
     }
 
     void Update()
     {
+        Debug.Log($"[PC Update] stopMoving={stopMoving} | enabled={this.enabled} | inputM={inputM}");
+
         if (stopMoving)
         {
             if (interactUI != null) interactUI.SetActive(false);
@@ -98,6 +104,8 @@ public class PlayerController : MonoBehaviour
     {
         inputM = playerInputComponent.actions["Move"].ReadValue<Vector2>();
         isSprinting = playerInputComponent.actions["Sprint"].ReadValue<float>() > 0.1f;
+
+        Debug.Log($"[Input] Move={inputM} | ActionMap activo={playerInputComponent.actions.FindActionMap("Player").enabled} | Dispositivos={playerInputComponent.devices.Count}");
 
         // Dirección relativa a la cámara (igual que el código viejo)
         if (cam != null)

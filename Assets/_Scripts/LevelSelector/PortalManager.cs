@@ -120,12 +120,18 @@ public class PortalManager : MonoBehaviour
     {
         puedeUsarPortal = false;
 
-        // Desactivar movimiento del jugador para evitar que se mueva durante el fade
-        if (scriptMovimientoJugador != null) scriptMovimientoJugador.enabled = false;
+        // Solo desactivamos INPUT, no el script completo
+        // Así el CharacterController sigue aplicando gravedad durante el fade
+        if (scriptMovimientoJugador != null)
+        {
+            LevelSelectorPlayer lsp = scriptMovimientoJugador as LevelSelectorPlayer;
+            if (lsp != null) LevelSelectorPlayer.puedeMoversis = false;
+        }
 
         if (fadeGroup != null) yield return StartCoroutine(Fade(1, 0.5f));
 
         SceneManager.LoadScene(nombreEscena);
+
     }
 
     IEnumerator SecuenciaRetorno(string key)
