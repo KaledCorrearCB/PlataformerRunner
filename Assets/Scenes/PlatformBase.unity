@@ -3074,6 +3074,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1977622866712851446, guid: 482fd89e00e511b479534863d9db2001, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: fb659c98d6ac4db41b88596ff2c4e2e1, type: 2}
     - target: {fileID: 6063897984642824726, guid: 482fd89e00e511b479534863d9db2001, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.153
@@ -3117,6 +3121,10 @@ PrefabInstance:
     - target: {fileID: 9084772515508612014, guid: 482fd89e00e511b479534863d9db2001, type: 3}
       propertyPath: m_Name
       value: Agua
+      objectReference: {fileID: 0}
+    - target: {fileID: 9084772515508612014, guid: 482fd89e00e511b479534863d9db2001, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
