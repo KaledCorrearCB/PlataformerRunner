@@ -127,5 +127,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralWobble
   intensity: 0.02
-  speed: 15
+  speed: 5
   damping: 4

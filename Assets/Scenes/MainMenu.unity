@@ -1119,6 +1119,10 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 970adab1-94da-487d-99ae-12deef116414
     m_ActionName: 'Player/Back[/Keyboard/escape]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 28e6cfdf-d0b6-42b3-952e-caf253372884
+    m_ActionName: 'Player/HoldInteract[/Keyboard/e,/DualSenseGamepadHID/buttonNorth]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -2436,8 +2440,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ControladorCursorUI
   imagenCursor: {fileID: 1311226089}
-  spriteMando: {fileID: 21300000, guid: d798ac6fa7144294586b7c7ae3e77921, type: 3}
-  spriteRaton: {fileID: 21300000, guid: a7e4934fe6bb9204188c05234e35e086, type: 3}
 --- !u!114 &1311226088
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3664,8 +3666,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuUI
   totalCoinsText: {fileID: 1727924689}
   panelPrincipal: {fileID: 1167566063}
-  panelRecords: {fileID: 864111384}
-  panelShop: {fileID: 1641180815}
+  panelRecords: {fileID: 0}
+  panelShop: {fileID: 0}
 --- !u!4 &1787629287
 Transform:
   m_ObjectHideFlags: 0

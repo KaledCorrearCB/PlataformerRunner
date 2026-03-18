@@ -7,8 +7,6 @@ using UnityEngine.InputSystem.UI;
 public class ControladorCursorUI : MonoBehaviour
 {
     public Image imagenCursor;
-    public Sprite spriteMando;
-    public Sprite spriteRaton;
 
     private VirtualMouseInput virtualMouse;
     private RectTransform rectTransform;
@@ -21,16 +19,14 @@ public class ControladorCursorUI : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
 
-        // Desaparecer el cursor de Windows de inmediato
-        Cursor.visible = false;
+        // Aseguramos que el mouse del sistema sea visible y libre inicialmente
+        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
 
-    void Start() => CambiarModo(false); // Iniciar siempre en modo ratón
-
     void Update()
     {
-        // 1. Detectar si el ratón se mueve físicamente
+        // Detección de movimiento del ratón físico
         if (Mouse.current != null)
         {
             Vector2 mouseDelta = Mouse.current.delta.ReadValue();
@@ -40,7 +36,7 @@ public class ControladorCursorUI : MonoBehaviour
             }
         }
 
-        // 2. Detectar si el stick del mando se mueve
+        // Detección de movimiento del stick del mando
         if (Gamepad.current != null)
         {
             Vector2 stickDelta = Gamepad.current.leftStick.ReadValue();
@@ -50,35 +46,43 @@ public class ControladorCursorUI : MonoBehaviour
             }
         }
 
-        // 3. SEGUIMIENTO (Solo si NO es mando, para evitar el 'rebote')
+        // Sincronización: Si no usamos mando, el cursor virtual sigue al ratón real
         if (!usandoMando && Mouse.current != null)
         {
-            rectTransform.position = Mouse.current.position.ReadValue();
+            transform.position = Mouse.current.position.ReadValue();
         }
 
         ClampearPosicion();
     }
 
-    private void ClampearPosicion()
+    private void CambiarModo(bool modoMando)
     {
-        Vector3 pos = rectTransform.localPosition;
-        Vector2 size = canvas.GetComponent<RectTransform>().sizeDelta / 2;
-        // Mantiene el cursor siempre dentro de la pantalla
-        pos.x = Mathf.Clamp(pos.x, -size.x, size.x);
-        pos.y = Mathf.Clamp(pos.y, -size.y, size.y);
-        rectTransform.localPosition = pos;
+        usandoMando = modoMando;
+
+        if (modoMando)
+        {
+            Cursor.visible = false;
+            // Activamos el input del VirtualMouse solo para el mando
+            virtualMouse.enabled = true;
+        }
+        else
+        {
+            Cursor.visible = true;
+            // Desactivamos el VirtualMouse para que no pelee con el ratón físico
+            virtualMouse.enabled = false;
+        }
     }
 
-    private void CambiarModo(bool mando)
+    private void ClampearPosicion()
     {
-        usandoMando = mando;
-        if (imagenCursor != null)
-        {
-            imagenCursor.sprite = usandoMando ? spriteMando : spriteRaton;
-            rectTransform.localScale = usandoMando ? Vector3.one : new Vector3(0.5f, 0.5f, 1f);
-        }
-        // DESACTIVAMOS el componente VirtualMouse si usamos el ratón físico para evitar conflictos
-        virtualMouse.enabled = mando;
-        Cursor.visible = false;
+        if (canvas == null) return;
+
+        Vector3 pos = rectTransform.localPosition;
+        RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+        Vector2 limit = canvasRect.sizeDelta / 2f;
+
+        pos.x = Mathf.Clamp(pos.x, -limit.x, limit.x);
+        pos.y = Mathf.Clamp(pos.y, -limit.y, limit.y);
+        rectTransform.localPosition = pos;
     }
 }
