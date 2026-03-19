@@ -14,7 +14,6 @@ public class CampamentoConstructor : MonoBehaviour
     public GameObject panelTeclaE;
     public Sprite spriteTeclado;
     public Sprite spriteMando;
-
     public KeyCode teclaAccion = KeyCode.E;
 
     [Header("Animacion Tecla (Smooth)")]
@@ -52,62 +51,44 @@ public class CampamentoConstructor : MonoBehaviour
 
     private Transform jugador;
     private CharacterController controller;
+    private LevelSelectorPlayer scriptJugador; // Referencia para animaciones
     private bool yaConstruido = false;
     private bool enSecuencia = false;
     private float fovOriginal;
     private Canvas canvasMundo;
-
     private SpriteRenderer sr;
     private Image img;
-
-    // Variable estática para que todas las carpas sepan qué se usó por última vez
     private static bool usandoMando = false;
 
     void Start()
     {
-        // Suscribirse al evento de cambio de dispositivo
         InputSystem.onActionChange += OnActionChange;
-
         if (resetearEnStart)
         {
             PlayerPrefs.DeleteKey(idEstructura);
             PlayerPrefs.Save();
         }
-
         yaConstruido = PlayerPrefs.GetInt(idEstructura, 0) == 1;
-
         if (camaraJuego == null) camaraJuego = Camera.main;
         if (camaraJuego != null) fovOriginal = camaraJuego.fieldOfView;
-
         if (barraProgreso != null)
         {
             canvasMundo = barraProgreso.GetComponentInParent<Canvas>();
             if (canvasMundo != null) canvasMundo.gameObject.SetActive(false);
         }
-
         if (panelTeclaE != null)
         {
             posInicialTecla = panelTeclaE.transform.localPosition;
             panelTeclaE.SetActive(false);
-
-            sr = panelTeclaE.GetComponent<SpriteRenderer>();
-            if (sr == null) sr = panelTeclaE.GetComponentInChildren<SpriteRenderer>();
-
-            img = panelTeclaE.GetComponent<Image>();
-            if (img == null) img = panelTeclaE.GetComponentInChildren<Image>();
+            sr = panelTeclaE.GetComponent<SpriteRenderer>() ?? panelTeclaE.GetComponentInChildren<SpriteRenderer>();
+            img = panelTeclaE.GetComponent<Image>() ?? panelTeclaE.GetComponentInChildren<Image>();
         }
-
         ActualizarVisuales();
-        ActualizarIconoInput(); // Carga inicial
+        ActualizarIconoInput();
     }
 
-    private void OnDestroy()
-    {
-        // Limpiar la suscripción al destruir el objeto
-        InputSystem.onActionChange -= OnActionChange;
-    }
+    private void OnDestroy() => InputSystem.onActionChange -= OnActionChange;
 
-    // Esta función detecta qué dispositivo se tocó por última vez
     private void OnActionChange(object obj, InputActionChange change)
     {
         if (change == InputActionChange.ActionStarted)
@@ -115,8 +96,7 @@ public class CampamentoConstructor : MonoBehaviour
             var action = (InputAction)obj;
             if (action.activeControl != null)
             {
-                var device = action.activeControl.device;
-                usandoMando = device is Gamepad;
+                usandoMando = action.activeControl.device is Gamepad;
                 ActualizarIconoInput();
             }
         }
@@ -129,7 +109,6 @@ public class CampamentoConstructor : MonoBehaviour
             if (panelTeclaE != null && panelTeclaE.activeSelf) panelTeclaE.SetActive(false);
             return;
         }
-
         if (jugador == null) { BuscarJugador(); return; }
 
         float distancia = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
@@ -138,54 +117,28 @@ public class CampamentoConstructor : MonoBehaviour
         if (distancia <= radioDeActivacion)
         {
             GestionarIndicadorE(true);
-
-            bool presionoInteractuar = false;
-            if (Input.GetKeyDown(teclaAccion)) presionoInteractuar = true;
-            if (Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame) presionoInteractuar = true;
+            bool presionoInteractuar = (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) ||
+                                     (Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame);
 
             if (presionoInteractuar) IniciarProceso();
         }
-        else
-        {
-            GestionarIndicadorE(false);
-        }
+        else GestionarIndicadorE(false);
     }
 
-    void ActualizarIconoInput()
-    {
-        Sprite spriteAUsar = usandoMando ? spriteMando : spriteTeclado;
-        if (spriteAUsar == null) return;
-        if (sr != null) sr.sprite = spriteAUsar;
-        if (img != null) img.sprite = spriteAUsar;
-    }
-
-    // --- EL RESTO DEL CÓDIGO SE MANTIENE EXACTAMENTE IGUAL ---
     void BuscarJugador()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
-        if (p != null) { jugador = p.transform; controller = p.GetComponent<CharacterController>(); }
-    }
-
-    void GestionarIndicadorE(bool estado)
-    {
-        if (panelTeclaE != null)
+        if (p != null)
         {
-            if (panelTeclaE.activeSelf != estado) panelTeclaE.SetActive(estado);
-            if (estado)
-            {
-                if (camaraJuego != null)
-                    panelTeclaE.transform.LookAt(panelTeclaE.transform.position + camaraJuego.transform.forward);
-                float nuevoY = posInicialTecla.y + Mathf.Sin(Time.time * velocidadFlotado) * amplitudFlotado;
-                panelTeclaE.transform.localPosition = new Vector3(posInicialTecla.x, nuevoY, posInicialTecla.z);
-            }
+            jugador = p.transform;
+            controller = p.GetComponent<CharacterController>();
+            scriptJugador = p.GetComponent<LevelSelectorPlayer>();
         }
     }
 
     void IniciarProceso()
     {
-        int monedas = PlayerPrefs.GetInt("TotalCoins", 0);
-        if (monedas >= precioSoles) StartCoroutine(CutsceneConstruccion());
-        else Debug.Log("Monedas insuficientes");
+        if (PlayerPrefs.GetInt("TotalCoins", 0) >= precioSoles) StartCoroutine(CutsceneConstruccion());
     }
 
     IEnumerator CutsceneConstruccion()
@@ -193,51 +146,72 @@ public class CampamentoConstructor : MonoBehaviour
         enSecuencia = true;
         if (panelTeclaE != null) panelTeclaE.SetActive(false);
         LevelSelectorPlayer.puedeMoversis = false;
+
+        // --- FASE 1: CAMINAR HACIA EL PUNTO ---
         while (true)
         {
             Vector3 posJugador = new Vector3(jugador.position.x, 0, jugador.position.z);
             Vector3 posDestino = new Vector3(puntoCaminar.position.x, 0, puntoCaminar.position.z);
-            if (Vector3.Distance(posJugador, posDestino) <= 0.4f) break;
+            float dist = Vector3.Distance(posJugador, posDestino);
+
+            if (dist <= 0.2f) break;
+
             Vector3 direccion = (posDestino - posJugador).normalized;
             if (direccion != Vector3.zero)
                 jugador.rotation = Quaternion.Slerp(jugador.rotation, Quaternion.LookRotation(direccion), 15f * Time.deltaTime);
+
             controller.Move(direccion * velocidadCaminar * Time.deltaTime);
-            if (camaraJuego != null)
-                camaraJuego.fieldOfView = Mathf.Lerp(camaraJuego.fieldOfView, zoomFOV, 5f * Time.deltaTime);
+
+            // ACTIVAR ANIMACIÓN DE CAMINATA
+            if (scriptJugador != null) scriptJugador.ActualizarAnimacion(1f);
+
+            if (camaraJuego != null) camaraJuego.fieldOfView = Mathf.Lerp(camaraJuego.fieldOfView, zoomFOV, 5f * Time.deltaTime);
             yield return null;
         }
+
+        // DETENER ANIMACIÓN AL LLEGAR
+        if (scriptJugador != null) scriptJugador.ActualizarAnimacion(0f);
+
+        // --- FASE 2: MIRAR A LA CARPA ---
         Vector3 dirHaciaCarpa = (new Vector3(transform.position.x, 0, transform.position.z) -
                                  new Vector3(jugador.position.x, 0, jugador.position.z)).normalized;
         if (dirHaciaCarpa != Vector3.zero)
         {
-            Quaternion rotacionDestino = Quaternion.LookRotation(dirHaciaCarpa);
-            while (Quaternion.Angle(jugador.rotation, rotacionDestino) > 0.1f)
+            Quaternion rotDestino = Quaternion.LookRotation(dirHaciaCarpa);
+            while (Quaternion.Angle(jugador.rotation, rotDestino) > 1f)
             {
-                jugador.rotation = Quaternion.RotateTowards(jugador.rotation, rotacionDestino, velocidadRotacion * Time.deltaTime);
+                jugador.rotation = Quaternion.RotateTowards(jugador.rotation, rotDestino, velocidadRotacion * Time.deltaTime);
                 yield return null;
             }
         }
+
+        // --- FASE 3: CONSTRUCCIÓN ---
         if (barraProgreso != null && canvasMundo != null)
         {
             canvasMundo.gameObject.SetActive(true);
-            float tiempoPasado = 0;
-            while (tiempoPasado < esperaMirandoVacio)
+            float t = 0;
+            while (t < esperaMirandoVacio)
             {
-                tiempoPasado += Time.deltaTime;
-                barraProgreso.value = tiempoPasado / esperaMirandoVacio;
+                t += Time.deltaTime;
+                barraProgreso.value = t / esperaMirandoVacio;
                 yield return null;
             }
             canvasMundo.gameObject.SetActive(false);
         }
+
         PlayerPrefs.SetInt("TotalCoins", PlayerPrefs.GetInt("TotalCoins") - precioSoles);
         PlayerPrefs.SetInt(idEstructura, 1);
         PlayerPrefs.Save();
         yaConstruido = true;
         ActualizarVisuales();
+
         if (particulasPolvoBase != null) particulasPolvoBase.Play();
         if (audioConstruccion != null) { audioConstruccion.pitch = Random.Range(0.9f, 1.1f); audioConstruccion.Play(); }
         if (modeloCarpa != null) StartCoroutine(EfectoReboteImpacto(modeloCarpa.transform));
+
         yield return new WaitForSeconds(pausaEnfoqueFinal);
+
+        // --- FASE 4: ZOOM OUT Y LIBERAR ---
         float tZoom = 0;
         while (tZoom < 1f)
         {
@@ -245,22 +219,22 @@ public class CampamentoConstructor : MonoBehaviour
             if (camaraJuego != null) camaraJuego.fieldOfView = Mathf.Lerp(zoomFOV, fovOriginal, tZoom);
             yield return null;
         }
+
         LevelSelectorPlayer.puedeMoversis = true;
         enSecuencia = false;
     }
 
     IEnumerator EfectoReboteImpacto(Transform objeto)
     {
-        float tiempo = 0;
-        float duracion = 1.2f;
+        float t = 0;
         Vector3 posOriginal = objeto.localPosition;
-        while (tiempo < duracion)
+        while (t < 1.2f)
         {
-            tiempo += Time.deltaTime;
-            float decay = Mathf.Exp(-tiempo * amortiguacion);
-            float bounceY = Mathf.Cos(tiempo * velocidadRebote) * decay * fuerzaEscalaY;
+            t += Time.deltaTime;
+            float decay = Mathf.Exp(-t * amortiguacion);
+            float bounceY = Mathf.Cos(t * velocidadRebote) * decay * fuerzaEscalaY;
             objeto.localScale = new Vector3(1f, 1f - bounceY, 1f);
-            float saltoY = Mathf.Abs(Mathf.Sin(tiempo * velocidadRebote)) * decay * fuerzaSaltoY;
+            float saltoY = Mathf.Abs(Mathf.Sin(t * velocidadRebote)) * decay * fuerzaSaltoY;
             objeto.localPosition = posOriginal + new Vector3(0, saltoY, 0);
             yield return null;
         }
@@ -272,5 +246,27 @@ public class CampamentoConstructor : MonoBehaviour
     {
         if (modeloCarpa != null) modeloCarpa.SetActive(yaConstruido);
         if (visualAuxiliar != null) visualAuxiliar.SetActive(!yaConstruido);
+    }
+
+    void GestionarIndicadorE(bool estado)
+    {
+        if (panelTeclaE != null)
+        {
+            if (panelTeclaE.activeSelf != estado) panelTeclaE.SetActive(estado);
+            if (estado && camaraJuego != null)
+            {
+                panelTeclaE.transform.LookAt(panelTeclaE.transform.position + camaraJuego.transform.forward);
+                float y = posInicialTecla.y + Mathf.Sin(Time.time * velocidadFlotado) * amplitudFlotado;
+                panelTeclaE.transform.localPosition = new Vector3(posInicialTecla.x, y, posInicialTecla.z);
+            }
+        }
+    }
+
+    void ActualizarIconoInput()
+    {
+        Sprite s = usandoMando ? spriteMando : spriteTeclado;
+        if (s == null) return;
+        if (sr != null) sr.sprite = s;
+        if (img != null) img.sprite = s;
     }
 }
