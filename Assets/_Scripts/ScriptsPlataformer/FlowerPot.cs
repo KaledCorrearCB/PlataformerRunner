@@ -98,7 +98,7 @@ public class FlowerPot : MonoBehaviour
         if (playerController == null)
             playerController = PlayerController.instance;
 
-
+        SessionManager.Instance?.AddCoin(5);
 
         // En realidad el problema está en que FlowerPot.Update() sigue
         // llamando UseWater() después de completarse. El fix correcto:
