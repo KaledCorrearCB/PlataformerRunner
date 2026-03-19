@@ -55,6 +55,51 @@ public class RunnerController : MonoBehaviour
     public GameObject waterSplashVFX;
     private bool isSlidingOnWater = false;
 
+    [Header("Jetpack")]
+    public float jetpackHeight = 10f;
+    public float jetpackDuration = 5f;
+    public float jetpackRiseSpeed = 10f;
+
+    [Header("Jetpack Visual")]
+    public GameObject jetpackModel;
+    public float jetpackTiltAngle = 25f;
+    public float tiltSpeed = 5f;
+
+    [Header("Camera Control Jetpack")]
+    public Transform playerCamera;
+
+    // POSICION
+    public Vector3 cameraJetpackOffset;
+    public Vector3 cameraNormalOffset;
+
+    // Rotación
+    public Vector3 cameraJetpackRotation;
+    public Vector3 cameraNormalRotation;
+
+    public float cameraMoveSpeed = 5f;
+    public float cameraRotateSpeed = 5f;
+
+    [Header("Trampoline")]
+    public float trampolineJumpForce = 20f;
+    public float trampolineForwardBoost = 5f;
+    public float trampolineBoostDuration = 0.5f;
+
+    private float trampolineTimer = 0f;
+
+
+    private Vector3 cameraOriginalPosition;
+
+
+    private Quaternion cameraOriginalRotation;
+
+    private Quaternion originalRotation;
+
+    private bool isJetpacking = false;
+    private float jetpackTimer = 0f;
+    private float targetJetpackY;
+
+
+
     private CharacterController controller;
 
     private int currentLane = 0;
@@ -103,6 +148,10 @@ public class RunnerController : MonoBehaviour
 
         if (ambulanceModel != null) ambulanceModel.SetActive(false);
         if (waterSplashVFX != null) waterSplashVFX.SetActive(false);
+
+        originalRotation = transform.localRotation;
+
+        cameraOriginalPosition = playerCamera.localPosition;
     }
 
     void Update()
@@ -209,6 +258,59 @@ public class RunnerController : MonoBehaviour
 
     void MovePlayer()
     {
+
+        float jetpackY = 0f;
+
+        if (isJetpacking)
+        {
+            jetpackTimer -= Time.deltaTime;
+
+            float newY = Mathf.MoveTowards(
+                transform.position.y,
+                targetJetpackY,
+                jetpackRiseSpeed * Time.deltaTime
+            );
+
+            jetpackY = newY - transform.position.y;
+
+            verticalVelocity = 0f;
+
+            if (jetpackTimer <= 0)
+            {
+                isJetpacking = false;
+
+                if (jetpackModel != null)
+                    jetpackModel.SetActive(false);
+            }
+        }
+
+        if (isSnappingToCenter && turnCenterPoint != null)
+        {
+            Vector3 targetPos = new Vector3(
+                turnCenterPoint.position.x,
+                transform.position.y,
+                turnCenterPoint.position.z
+            );
+
+            Vector3 moveToCenter = targetPos - transform.position;
+
+            controller.Move(moveToCenter);
+
+
+            if (moveToCenter.magnitude < 0.05f)
+            {
+                transform.position = targetPos;
+
+                pivotPoint = transform.position;
+                currentLane = 0;
+
+                currentForward = transform.forward;
+                currentRight = transform.right;
+
+                isSnappingToCenter = false;
+            }
+        }
+
         Vector3 offsetFromPivot = transform.position - pivotPoint;
 
         float currentLateralPos = Vector3.Dot(offsetFromPivot, currentRight);
@@ -226,18 +328,27 @@ public class RunnerController : MonoBehaviour
 
         float actualSpeed = currentForwardSpeed;
 
+
+
         if (isAmbulanceMode)
             actualSpeed += ambulanceSpeedBoost;
 
         if (isSlidingOnWater)
             actualSpeed *= slideSpeedMultiplier;
 
+        // BOOST DEL TRAMPOLÍN
+        if (trampolineTimer > 0)
+        {
+            trampolineTimer -= Time.deltaTime;
+            actualSpeed += trampolineForwardBoost;
+        }
+
         Vector3 forwardMoveVector = currentForward * actualSpeed;
 
         CheckWallRun();
         ApplyPhysics();
 
-        Vector3 verticalMoveVector = Vector3.up * verticalVelocity;
+        Vector3 verticalMoveVector = Vector3.up * (verticalVelocity + (jetpackY / Time.deltaTime));
 
         controller.Move((forwardMoveVector + lateralMoveVector + verticalMoveVector) * Time.deltaTime);
 
@@ -260,31 +371,62 @@ public class RunnerController : MonoBehaviour
             }
         }
 
-        if (isSnappingToCenter && turnCenterPoint != null)
+        // ROTACIÓN DEL PERSONAJE PARA JETPACK
+        if (isJetpacking)
         {
-            Vector3 targetPos = new Vector3(
-                turnCenterPoint.position.x,
-                transform.position.y,
-                turnCenterPoint.position.z
+            Vector3 currentEuler = transform.eulerAngles;
+
+            Quaternion jetpackRot = Quaternion.Euler(90f, currentEuler.y, 0f);
+
+            transform.rotation = Quaternion.Lerp(
+                transform.rotation,
+                jetpackRot,
+                tiltSpeed * Time.deltaTime
             );
-
-            Vector3 moveToCenter = targetPos - transform.position;
-
-            controller.Move(moveToCenter);
-
-            if (moveToCenter.magnitude < 0.05f)
-            {
-                transform.position = targetPos;
-
-                pivotPoint = transform.position;
-                currentLane = 0;
-
-                currentForward = transform.forward;
-                currentRight = transform.right;
-
-                isSnappingToCenter = false;
-            }
         }
+        else
+        {
+            Vector3 currentEuler = transform.eulerAngles;
+
+            Quaternion normalRot = Quaternion.Euler(0f, currentEuler.y, 0f);
+
+            transform.rotation = Quaternion.Lerp(
+                transform.rotation,
+                normalRot,
+                tiltSpeed * Time.deltaTime
+            );
+        }
+
+        // CÁMARA (POSICIÓN + ROTACIÓN)
+        Vector3 targetPos1;
+        Vector3 targetRotEuler;
+
+        if (isJetpacking)
+        {
+            targetPos1 = cameraJetpackOffset;
+            targetRotEuler = cameraJetpackRotation;
+        }
+        else
+        {
+            targetPos1 = cameraNormalOffset;
+            targetRotEuler = cameraNormalRotation;
+        }
+
+        // POSICIÓN
+        playerCamera.localPosition = Vector3.Lerp(
+            playerCamera.localPosition,
+            targetPos1,
+            cameraMoveSpeed * Time.deltaTime
+        );
+
+        // ROTACIÓN
+        Quaternion targetRot = Quaternion.Euler(targetRotEuler);
+
+        playerCamera.localRotation = Quaternion.Lerp(
+            playerCamera.localRotation,
+            targetRot,
+            cameraRotateSpeed * Time.deltaTime
+        );
     }
 
     void MoveLane(bool goingRight)
@@ -404,6 +546,7 @@ public class RunnerController : MonoBehaviour
     {
         if (hit.gameObject.CompareTag("Obstacle"))
         {
+
             if (Vector3.Dot(hit.normal, currentForward) < -0.6f)
             {
                 if (isAmbulanceMode)
@@ -414,6 +557,8 @@ public class RunnerController : MonoBehaviour
                 else
                     Die();
             }
+
+            if (isJetpacking) return;
         }
     }
 
@@ -458,6 +603,17 @@ public class RunnerController : MonoBehaviour
             if (waterSplashVFX != null)
                 waterSplashVFX.SetActive(true);
         }
+
+        if (other.CompareTag("Jetpack"))
+        {
+            ActivateJetpack();
+            Destroy(other.gameObject);
+        }
+
+        if (other.CompareTag("Trampoline"))
+        {
+            ActivateTrampoline();
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -476,4 +632,29 @@ public class RunnerController : MonoBehaviour
         }
     }
 
+    //-------- JETPACK --------//
+
+    void ActivateJetpack()
+    {
+        isJetpacking = true;
+        jetpackTimer = jetpackDuration;
+
+        targetJetpackY = transform.position.y + jetpackHeight;
+
+        verticalVelocity = 0f;
+
+        if (jetpackModel != null)
+            jetpackModel.SetActive(true);
+    }
+
+    //-------- TRAMPOLINE --------//
+
+    void ActivateTrampoline()
+    {
+        // Impulso vertical fuerte
+        verticalVelocity = trampolineJumpForce;
+
+        // Activar boost hacia adelante
+        trampolineTimer = trampolineBoostDuration;
+    }
 }
