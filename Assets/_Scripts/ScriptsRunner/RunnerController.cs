@@ -84,6 +84,9 @@ public class RunnerController : MonoBehaviour
     public float trampolineForwardBoost = 5f;
     public float trampolineBoostDuration = 0.5f;
 
+    [Header("Animaciones")]
+    public Animator animator;
+
     private float trampolineTimer = 0f;
 
 
@@ -127,6 +130,11 @@ public class RunnerController : MonoBehaviour
 
     private bool isSnappingToCenter = false;
 
+    private Quaternion visualOriginalRotation;
+    public Transform visualModel;
+
+    private bool isSliding = false;
+
 
 
     void Start()
@@ -152,6 +160,8 @@ public class RunnerController : MonoBehaviour
         originalRotation = transform.localRotation;
 
         cameraOriginalPosition = playerCamera.localPosition;
+
+        visualOriginalRotation = visualModel.localRotation;
     }
 
     void Update()
@@ -178,6 +188,8 @@ public class RunnerController : MonoBehaviour
 
         if (transform.position.y < -5f)
             Die();
+
+        UpdateAnimations();
 
     }
 
@@ -321,7 +333,9 @@ public class RunnerController : MonoBehaviour
 
         Vector3 lateralMoveVector = Vector3.zero;
 
-        if (!isSnappingToCenter)
+        bool isSliding = controller.height < originalHeight;
+
+        if (!isSnappingToCenter && !isSliding)
         {
             lateralMoveVector = currentRight * (lateralDelta * laneChangeSpeed);
         }
@@ -533,7 +547,10 @@ public class RunnerController : MonoBehaviour
     void StartSlide()
     {
         controller.height = slideHeight;
-        controller.center = new Vector3(0, slideHeight / 2f, 0);
+
+        float centerOffset = (originalHeight - slideHeight) / 2f;
+
+        controller.center = originalCenter - new Vector3(0, centerOffset, 0);
     }
 
     void StopSlide()
@@ -629,6 +646,29 @@ public class RunnerController : MonoBehaviour
 
             if (waterSplashVFX != null)
                 waterSplashVFX.SetActive(false);
+        }
+    }
+
+    void UpdateAnimations()
+    {
+        if (animator == null) return;
+
+        animator.SetBool("isGrounded", controller.isGrounded);
+        animator.SetBool("isSliding", controller.height < originalHeight);
+        animator.SetBool("isJetpacking", isJetpacking);
+
+        animator.SetFloat("verticalVelocity", verticalVelocity);
+
+        // Siempre está corriendo
+        animator.SetBool("isRunning", true);
+
+        if (isSliding)
+        {
+            visualModel.localRotation = Quaternion.Euler(0, 180f, 0);
+        }
+        else
+        {
+            visualModel.localRotation = visualOriginalRotation;
         }
     }
 
