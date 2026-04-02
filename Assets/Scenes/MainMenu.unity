@@ -1123,7 +1123,6 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 28e6cfdf-d0b6-42b3-952e-caf253372884
     m_ActionName: 'Player/HoldInteract[/Keyboard/e,/DualSenseGamepadHID/buttonNorth]'
-    m_ActionName: 'Player/HoldInteract[/Keyboard/e]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
