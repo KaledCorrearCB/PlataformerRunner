@@ -64,7 +64,7 @@ AnimatorStateMachine:
     m_Position: {x: 260, y: 110, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1353247951131080046}
-    m_Position: {x: 431.20026, y: 218.17056, z: 0}
+    m_Position: {x: 430, y: 220, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 6297769169143019952}
     m_Position: {x: 450, y: -10, z: 0}
@@ -236,7 +236,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Salto
-  m_Speed: 2
+  m_Speed: 1.5
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 8855045763315959370}
@@ -269,9 +269,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
-  m_TransitionOffset: 0
-  m_ExitTime: 0.7222222
+  m_TransitionDuration: 0.29638875
+  m_TransitionOffset: 0.013806782
+  m_ExitTime: 0.6449077
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0

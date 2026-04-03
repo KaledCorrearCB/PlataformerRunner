@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 78518bf3dc7abaf4eb1d543b3a982bd4
+guid: 1efbbf3443f83c5499821dbcbb9a7403
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -22,7 +22,7 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 1
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
@@ -31,13 +31,13 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Derrape
-      takeName: root|Armature|mixamo.com|Layer0.001_remap
-      internalID: 947582748246697039
+      name: derrapee
+      takeName: rig|rig|Armature|mixamo.com|Layer0.001_remap
+      internalID: 1659607167323257081
       firstFrame: 0
       lastFrame: 47
       wrapMode: 0
-      orientationOffsetY: 180
+      orientationOffsetY: 0
       level: 0
       cycleOffset: 0
       loop: 0
@@ -48,7 +48,7 @@ ModelImporter:
       loopBlendPositionY: 0
       loopBlendPositionXZ: 0
       keepOriginalOrientation: 0
-      keepOriginalPositionY: 0
+      keepOriginalPositionY: 1
       keepOriginalPositionXZ: 0
       heightFromFeet: 0
       mirror: 0
