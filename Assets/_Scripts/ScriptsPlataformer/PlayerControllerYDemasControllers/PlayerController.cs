@@ -51,6 +51,11 @@ public class PlayerController : MonoBehaviour
     private float verticalVelocity;
     private bool isSprinting;
 
+    private GrapplingRope currentRope;
+    private bool isOnGrapple;
+    private bool justLaunched;       // flag para proteger el impulso
+    private float launchTimer;        // cuánto tiempo proteger
+
     // ─────────────────────────────────────────────
     //  Awake / Update
     // ─────────────────────────────────────────────
@@ -89,6 +94,24 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+
+        // Durante el swing: solo aplicar gravedad y movimiento vertical
+        // GrapplingRope maneja la posición horizontal
+
+        // Contador para proteger el impulso de liana
+        if (justLaunched)
+        {
+            launchTimer -= Time.deltaTime;
+            if (launchTimer <= 0f) justLaunched = false;
+        }
+
+        if (isOnGrapple)
+        {
+            return;
+        }
+
+
+
         HandleInputs();
         ApplyMovement();
         RotateModel();
@@ -99,6 +122,11 @@ public class PlayerController : MonoBehaviour
     // ─────────────────────────────────────────────
     //  Movimiento
     // ─────────────────────────────────────────────
+
+
+
+
+
 
     private void HandleInputs()
     {
@@ -139,6 +167,19 @@ public class PlayerController : MonoBehaviour
         verticalVelocity += characterGravity * Time.deltaTime;
     }
 
+
+    private void ApplyGravityOnly()
+    {
+        if (charCon.isGrounded && verticalVelocity < 0f)
+            verticalVelocity = -2f;
+
+        // Solo aplicar gravedad si NO acabamos de recibir un impulso de liana
+        if (!justLaunched)
+            verticalVelocity += characterGravity * Time.deltaTime;
+
+        charCon.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+    }
+
     private void ApplyMovement()
     {
         charCon.Move(movementVector * Time.deltaTime);
@@ -173,6 +214,10 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteractionUI()
     {
+
+        // Si estamos en liana, GrapplingRope controla el movimiento
+        if (isOnGrapple) return;
+
         if (interactUI == null) return;
 
         bool show = currentLevelNode != null
@@ -195,6 +240,13 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     public void OnJump(InputAction.CallbackContext context)
     {
+
+        if (isOnGrapple && currentRope != null)
+        {
+            currentRope.ReleaseSwing();
+            return;
+        }
+
         if (!context.performed) return;
         if (!charCon.isGrounded || stopMoving) return;
 
@@ -283,6 +335,46 @@ public class PlayerController : MonoBehaviour
         else
         {
             Debug.LogWarning("[PlayerController] No se encontró CharacterDetector en el jugador.");
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    //  Integración con GrapplingRope
+    // ─────────────────────────────────────────────
+
+    public void OnGrappleStart(GrapplingRope rope)
+    {
+        currentRope = rope;
+        isOnGrapple = true;
+        justLaunched = false;
+
+        // ✅ Limpiar velocidad residual del movimiento que traía
+        movementVector = Vector3.zero;
+        inputVector = Vector3.zero;
+        verticalVelocity = 0f;
+
+        // ✅ Deshabilitar el CC para que no interfiera con el movimiento directo
+        charCon.enabled = false;
+
+        if (anim != null) anim.SetBool("IsSwinging", true);
+    }
+
+    public void OnGrappleStop(Vector3 launchVelocity)
+    {
+        currentRope = null;
+        isOnGrapple = false;
+
+        // ✅ Rehabilitar el CC antes de devolver el control
+        charCon.enabled = true;
+
+        verticalVelocity = launchVelocity.y;
+        justLaunched = true;
+        launchTimer = 0.15f;
+
+        if (anim != null)
+        {
+            anim.SetBool("IsSwinging", false);
+            anim.SetTrigger("Jump");
         }
     }
 }
