@@ -240,6 +240,7 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     public void OnJump(InputAction.CallbackContext context)
     {
+        if (!context.performed) return;
 
         if (isOnGrapple && currentRope != null)
         {
