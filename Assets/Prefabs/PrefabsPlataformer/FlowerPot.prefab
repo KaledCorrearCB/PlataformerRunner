@@ -350,7 +350,7 @@ MonoBehaviour:
   requiredWater: 100
   progressBar: {fileID: 1116383310791781969}
   canvas: {fileID: 37424887158520392}
-  treePrefab: {fileID: 919132149155446097, guid: b10fa4585eba3f54787941e3c57e2576, type: 3}
+  treePrefab: {fileID: 5067555841936562664, guid: d9f32275fb40e564a91b3245ff129951, type: 3}
   spawnPoint: {fileID: 645431686375849215}
 --- !u!1 &2044193998969881064
 GameObject:
