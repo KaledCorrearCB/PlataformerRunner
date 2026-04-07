@@ -67,6 +67,7 @@ MonoBehaviour:
   currentFlowerPot: {fileID: 0}
   currentWaterSource: {fileID: 0}
   currentCharacterInNeed: {fileID: 0}
+  coyoteTime: 0.2
 --- !u!143 &8389045184730695206
 CharacterController:
   m_ObjectHideFlags: 0
