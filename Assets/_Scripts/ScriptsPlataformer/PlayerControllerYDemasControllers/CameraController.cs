@@ -29,7 +29,7 @@ public class CameraController : MonoBehaviour
         );
 
         // Rotar la cámara para mirar al jugador
-        Vector3 lookDir = target.position - transform.position;
+        Vector3 lookDir = target.position - desiredPosition;
         Quaternion targetRotation = Quaternion.LookRotation(lookDir);
 
         transform.rotation = Quaternion.Slerp(

@@ -56,6 +56,12 @@ public class PlayerController : MonoBehaviour
     private bool justLaunched;       // flag para proteger el impulso
     private float launchTimer;        // cuánto tiempo proteger
 
+    // — Coyote Time —
+    [Header("Configuración de Salto")]
+    public float coyoteTime = 0.15f;       // segundos de gracia tras caer de un borde
+    private float coyoteTimeCounter;        // contador regresivo
+    private bool wasGrounded;               // estado del frame anterior
+
     // ─────────────────────────────────────────────
     //  Awake / Update
     // ─────────────────────────────────────────────
@@ -133,9 +139,16 @@ public class PlayerController : MonoBehaviour
         inputM = playerInputComponent.actions["Move"].ReadValue<Vector2>();
         isSprinting = playerInputComponent.actions["Sprint"].ReadValue<float>() > 0.1f;
 
-        Debug.Log($"[Input] Move={inputM} | ActionMap activo={playerInputComponent.actions.FindActionMap("Player").enabled} | Dispositivos={playerInputComponent.devices.Count}");
+        // ── Coyote Time ──────────────────────────────────────────
+        // Si acaba de tocar el suelo → recarga el contador
+        if (charCon.isGrounded)
+            coyoteTimeCounter = coyoteTime;
+        else
+            coyoteTimeCounter -= Time.deltaTime;   // se agota en el aire
 
-        // Dirección relativa a la cámara (igual que el código viejo)
+        wasGrounded = charCon.isGrounded;
+        // ─────────────────────────────────────────────────────────
+
         if (cam != null)
         {
             Vector3 camForward = cam.transform.forward;
@@ -148,7 +161,6 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // Fallback sin cámara
             inputVector = new Vector3(inputM.x, 0f, inputM.y);
         }
 
@@ -167,18 +179,6 @@ public class PlayerController : MonoBehaviour
         verticalVelocity += characterGravity * Time.deltaTime;
     }
 
-
-    private void ApplyGravityOnly()
-    {
-        if (charCon.isGrounded && verticalVelocity < 0f)
-            verticalVelocity = -2f;
-
-        // Solo aplicar gravedad si NO acabamos de recibir un impulso de liana
-        if (!justLaunched)
-            verticalVelocity += characterGravity * Time.deltaTime;
-
-        charCon.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
-    }
 
     private void ApplyMovement()
     {
@@ -242,17 +242,24 @@ public class PlayerController : MonoBehaviour
     {
         if (!context.performed) return;
 
+        // Soltar liana si está en swing
         if (isOnGrapple && currentRope != null)
         {
             currentRope.ReleaseSwing();
             return;
         }
 
-        if (!context.performed) return;
-        if (!charCon.isGrounded || stopMoving) return;
+        if (stopMoving) return;
 
-        verticalVelocity = jumpForce;
-        if (anim != null) anim.SetTrigger("Jump");
+        // ── Coyote Time ──────────────────────────────────────────
+        // Permite saltar si el contador aún tiene tiempo (suelo real o gracia)
+        if (coyoteTimeCounter > 0f)
+        {
+            verticalVelocity = jumpForce;
+            coyoteTimeCounter = 0f;     // consumir el coyote time inmediatamente
+            if (anim != null) anim.SetTrigger("Jump");
+        }
+        // ─────────────────────────────────────────────────────────
     }
 
     /// <summary>
