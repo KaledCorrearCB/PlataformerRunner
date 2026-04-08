@@ -13,7 +13,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
-  m_LightmapFlags: 4
+  m_LightmapFlags: 1
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 3000
@@ -70,20 +70,20 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Vector1_17E53C12: 0.77
+    - Vector1_17E53C12: -10.77
     - Vector1_244B0600: 1
     - Vector1_34CF798A: 1.75
-    - Vector1_36E8227: 0.65
+    - Vector1_36E8227: 0.06
     - Vector1_3D886DA1: 0
     - Vector1_46E42935: 0.5
     - Vector1_47683D42: 0
-    - Vector1_A0EAD698: 0.5
-    - Vector1_A6A0BC26: 0
-    - Vector1_B9F56378: -0.3
-    - Vector1_C360A163: 8.06
+    - Vector1_A0EAD698: -0.61
+    - Vector1_A6A0BC26: 1.13
+    - Vector1_B9F56378: -0.38
+    - Vector1_C360A163: 9.07
     - Vector1_DF445019: 1.5
     - Vector1_E03AB928: 0.05
-    - Vector1_E5C51606: 0.5
+    - Vector1_E5C51606: -3.59
     - Vector1_F38B44AA: 0.5
     - _AlphaClip: 0
     - _Blend: 0
@@ -106,7 +106,7 @@ Material:
     - _SrcBlend: 1
     - _Surface: 0
     - _WaveFrequency: 1.75
-    - _WaveScale: 0.004
+    - _WaveScale: 0
     - _WaveSpeed: 1.5
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
