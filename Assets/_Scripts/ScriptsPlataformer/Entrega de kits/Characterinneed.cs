@@ -174,7 +174,7 @@ public class CharacterInNeed : MonoBehaviour
 
                 // Ajusta la opacidad (0 = invisible, 1 = sólido)
                 Color c = mat.color;
-                c.a = 0.95f; // ← cambia este valor a tu gusto
+                c.a = 0.1f; // ← cambia este valor a tu gusto
                 mat.color = c;
             }
         }
