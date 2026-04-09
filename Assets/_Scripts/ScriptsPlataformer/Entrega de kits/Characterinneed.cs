@@ -10,6 +10,7 @@
 //   5. Repite para Personaje 2 y 3.
 
 using UnityEngine;
+using System.Collections;
 
 public class CharacterInNeed : MonoBehaviour
 {
@@ -19,8 +20,16 @@ public class CharacterInNeed : MonoBehaviour
 
     private bool _alreadyHelped = false;
 
+    [Header("Animación")]
+    [SerializeField] private Animator _animator;
+
     // *** NUEVO — getter público para CharacterDetector ***
     /// <summary>Devuelve true si este personaje ya fue ayudado y no debe detectarse.</summary>
+    /// 
+    private void Awake()
+    {
+        _animator = GetComponent<Animator>();
+    }
     public bool IsAlreadyHelped() => _alreadyHelped;
 
     private void OnTriggerEnter(Collider other)
@@ -58,6 +67,10 @@ public class CharacterInNeed : MonoBehaviour
         {
             _alreadyHelped = true;
 
+            // *** ANIMACIÓN FELIZ ***
+            _animator.SetBool("Ayudado", true);
+            StartCoroutine(HappyThenDisappear());
+
             if (PlayerController.instance.currentCharacterInNeed == this)
                 PlayerController.instance.currentCharacterInNeed = null;
 
@@ -81,4 +94,48 @@ public class CharacterInNeed : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, 2f);
     }
+
+    private IEnumerator HappyThenDisappear()
+    {
+        yield return null;
+        yield return null;
+
+        float animLength = 1.5f;
+        if (_animator != null && _animator.runtimeAnimatorController != null)
+        {
+            foreach (var clip in _animator.runtimeAnimatorController.animationClips)
+                if (clip.name == "Feliz") { animLength = clip.length; break; }
+        }
+        yield return new WaitForSeconds(animLength);
+
+        // Usamos el PADRE para la animación de escala
+        Transform root = transform;
+        Vector3 originalScale = root.localScale;
+        Vector3 originalPosition = root.position;
+        Vector3 bigScale = originalScale * 1.4f;
+        float t = 0f;
+
+        // Agrandarse
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.3f;
+            root.localScale = Vector3.Lerp(originalScale, bigScale, t);
+            yield return null;
+        }
+
+        // Encogerse subiendo
+        t = 0f;
+        Vector3 riseTarget = originalPosition + Vector3.up * 1.5f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.4f;
+            root.localScale = Vector3.Lerp(bigScale, Vector3.zero, t);
+            root.position = Vector3.Lerp(originalPosition, riseTarget, t);
+            yield return null;
+        }
+
+        Destroy(root.gameObject); // ← destruye todo el personaje
+    }
+
+
 }
