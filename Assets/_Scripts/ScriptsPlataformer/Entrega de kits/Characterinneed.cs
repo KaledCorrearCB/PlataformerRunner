@@ -23,6 +23,13 @@ public class CharacterInNeed : MonoBehaviour
     [Header("Animación")]
     [SerializeField] private Animator _animator;
 
+    [Header("Kit Visual")]
+    public GameObject kitPrefab;          // arrastra el prefab del kit aquí
+    public float floatHeight = 2f;        // altura sobre el personaje
+    public float rotationSpeed = 90f;     // grados por segundo
+
+    private GameObject _kitInstance;      // referencia interna
+
     // *** NUEVO — getter público para CharacterDetector ***
     /// <summary>Devuelve true si este personaje ya fue ayudado y no debe detectarse.</summary>
     /// 
@@ -38,6 +45,7 @@ public class CharacterInNeed : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         PlayerController.instance.currentCharacterInNeed = this;
+        ShowKitIndicator();
         Debug.Log($"[{characterName}] Jugador cerca. Necesita: {requiredKit}. Presiona E.");
     }
 
@@ -47,6 +55,8 @@ public class CharacterInNeed : MonoBehaviour
 
         if (PlayerController.instance.currentCharacterInNeed == this)
             PlayerController.instance.currentCharacterInNeed = null;
+
+        HideKitIndicator();
     }
 
     /// <summary>
@@ -67,6 +77,7 @@ public class CharacterInNeed : MonoBehaviour
         {
             _alreadyHelped = true;
 
+            HideKitIndicator();
             // *** ANIMACIÓN FELIZ ***
             _animator.SetBool("Ayudado", true);
             StartCoroutine(HappyThenDisappear());
@@ -97,6 +108,7 @@ public class CharacterInNeed : MonoBehaviour
 
     private IEnumerator HappyThenDisappear()
     {
+
         yield return null;
         yield return null;
 
@@ -135,6 +147,50 @@ public class CharacterInNeed : MonoBehaviour
         }
 
         Destroy(root.gameObject); // ← destruye todo el personaje
+    }
+
+    private void ShowKitIndicator()
+    {
+        if (kitPrefab == null) return;
+        if (_kitInstance != null) return; // ya está visible
+
+        Vector3 spawnPos = transform.position + Vector3.up * floatHeight;
+        _kitInstance = Instantiate(kitPrefab, spawnPos, Quaternion.identity);
+        _kitInstance.transform.SetParent(transform); // sigue al personaje
+
+        foreach (Renderer rend in _kitInstance.GetComponentsInChildren<Renderer>())
+        {
+            foreach (Material mat in rend.materials)
+            {
+                // Activa el modo transparente
+                mat.SetFloat("_Mode", 3);
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                mat.SetInt("_ZWrite", 0);
+                mat.DisableKeyword("_ALPHATEST_ON");
+                mat.EnableKeyword("_ALPHABLEND_ON");
+                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                mat.renderQueue = 3000;
+
+                // Ajusta la opacidad (0 = invisible, 1 = sólido)
+                Color c = mat.color;
+                c.a = 0.95f; // ← cambia este valor a tu gusto
+                mat.color = c;
+            }
+        }
+    }
+
+    private void HideKitIndicator()
+    {
+        if (_kitInstance == null) return;
+        Destroy(_kitInstance);
+        _kitInstance = null;
+    }
+
+    private void Update()
+    {
+        if (_kitInstance == null) return;
+        _kitInstance.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
     }
 
 

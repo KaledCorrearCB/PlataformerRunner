@@ -48,6 +48,9 @@ MonoBehaviour:
   requiredKit: 2
   characterName: Persona
   _animator: {fileID: 0}
+  kitPrefab: {fileID: 0}
+  floatHeight: 2
+  rotationSpeed: 90
 --- !u!1001 &4144997004547242162
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -174,6 +177,9 @@ MonoBehaviour:
   requiredKit: 2
   characterName: Ropa
   _animator: {fileID: 7561378269817734435}
+  kitPrefab: {fileID: 3623519304656670825, guid: 5a71b9f86af0e414da27897b5fda542c, type: 3}
+  floatHeight: 2.2
+  rotationSpeed: 60
 --- !u!4 &4471869568589356889 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 87edcfd5d23f35946a279054f668000f, type: 3}
