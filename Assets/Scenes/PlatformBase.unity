@@ -3327,6 +3327,18 @@ PrefabInstance:
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
       objectReference: {fileID: 0}
+    - target: {fileID: 689757190579169906, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Color.b
+      value: 0.1233535
+      objectReference: {fileID: 0}
+    - target: {fileID: 689757190579169906, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Color.g
+      value: 0.18763512
+      objectReference: {fileID: 0}
+    - target: {fileID: 689757190579169906, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Color.r
+      value: 0.2830189
+      objectReference: {fileID: 0}
     - target: {fileID: 778621156716127066, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3383,6 +3395,18 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2848066027127836823, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Color.b
+      value: 0.7056604
+      objectReference: {fileID: 0}
+    - target: {fileID: 2848066027127836823, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Color.g
+      value: 0.69806993
+      objectReference: {fileID: 0}
+    - target: {fileID: 2848066027127836823, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Color.r
+      value: 0.12648623
+      objectReference: {fileID: 0}
     - target: {fileID: 2872399321755192836, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3431,6 +3455,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Records
       objectReference: {fileID: 0}
+    - target: {fileID: 7743487198205482670, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: 008541be8ad8b3f42a5318e1c4a73d1c, type: 2}
     - target: {fileID: 9211056242475640562, guid: 245b8821f07e0b34bad4ebc274845489, type: 3}
       propertyPath: m_Pivot.x
       value: 0
