@@ -167,6 +167,9 @@ MonoBehaviour:
   requiredKit: 0
   characterName: Herido
   _animator: {fileID: 3411604874578786615}
+  kitPrefab: {fileID: 8853944290828412736, guid: bdb61e845529bb64fb41ef15dd6e8fcd, type: 3}
+  floatHeight: 2.2
+  rotationSpeed: 60
 --- !u!4 &8770857419254244173 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 87edcfd5d23f35946a279054f668000f, type: 3}
