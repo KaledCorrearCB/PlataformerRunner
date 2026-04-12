@@ -13041,10 +13041,14 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 807260327}
 <<<<<<< HEAD
+<<<<<<< HEAD
   m_Mesh: {fileID: 2017883154}
 =======
   m_Mesh: {fileID: 1801059094}
 >>>>>>> parent of aa69e17 (MERGE DE TUTORIAL)
+=======
+  m_Mesh: {fileID: 1801059094}
+>>>>>>> parent of 4a5e6ed (Merge pull request #122 from KaledCorrearCB/Respaldo-v0.1)
 --- !u!4 &807260332
 Transform:
   m_ObjectHideFlags: 0
@@ -15809,10 +15813,14 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1098675205}
 <<<<<<< HEAD
+<<<<<<< HEAD
   m_Mesh: {fileID: 57299142}
 =======
   m_Mesh: {fileID: 63543693}
 >>>>>>> parent of aa69e17 (MERGE DE TUTORIAL)
+=======
+  m_Mesh: {fileID: 63543693}
+>>>>>>> parent of 4a5e6ed (Merge pull request #122 from KaledCorrearCB/Respaldo-v0.1)
 --- !u!4 &1098675210
 Transform:
   m_ObjectHideFlags: 0
