@@ -89,9 +89,7 @@ public class RunnerController : MonoBehaviour
 
     private float trampolineTimer = 0f;
 
-
     private Vector3 cameraOriginalPosition;
-
 
     private Quaternion cameraOriginalRotation;
 
@@ -100,8 +98,6 @@ public class RunnerController : MonoBehaviour
     private bool isJetpacking = false;
     private float jetpackTimer = 0f;
     private float targetJetpackY;
-
-
 
     private CharacterController controller;
 
@@ -134,8 +130,6 @@ public class RunnerController : MonoBehaviour
     public Transform visualModel;
 
     private bool isSliding = false;
-
-
 
     void Start()
     {
@@ -308,7 +302,6 @@ public class RunnerController : MonoBehaviour
 
             controller.Move(moveToCenter);
 
-
             if (moveToCenter.magnitude < 0.05f)
             {
                 transform.position = targetPos;
@@ -341,8 +334,6 @@ public class RunnerController : MonoBehaviour
         }
 
         float actualSpeed = currentForwardSpeed;
-
-
 
         if (isAmbulanceMode)
             actualSpeed += ambulanceSpeedBoost;
@@ -445,13 +436,10 @@ public class RunnerController : MonoBehaviour
 
     void MoveLane(bool goingRight)
     {
-
-       
-            if (!isRotating)
-            {
-                currentLane = Mathf.Clamp(currentLane + (goingRight ? 1 : -1), -1, 1);
-            }
-        
+        if (!isRotating)
+        {
+            currentLane = Mathf.Clamp(currentLane + (goingRight ? 1 : -1), -1, 1);
+        }
     }
 
     void TurnCorner(float angle)
@@ -466,7 +454,6 @@ public class RunnerController : MonoBehaviour
         }
 
         targetRotation *= Quaternion.Euler(0, angle, 0);
-
 
         isRotating = true;
         isInTurnZone = false;
@@ -629,7 +616,15 @@ public class RunnerController : MonoBehaviour
 
         if (other.CompareTag("Trampoline"))
         {
+            // 1. Ejecuta el salto (código original)
             ActivateTrampoline();
+
+            // 2. Ejecuta la animación buscando el script en el trampolín (NUEVO)
+            TrampolineAnimation anim = other.GetComponent<TrampolineAnimation>();
+            if (anim != null)
+            {
+                anim.DispararAnimacion();
+            }
         }
     }
 
