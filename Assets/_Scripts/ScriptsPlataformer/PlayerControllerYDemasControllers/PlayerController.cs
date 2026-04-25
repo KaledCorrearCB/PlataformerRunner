@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 movementVector;
     private float verticalVelocity;
     private bool isSprinting;
-
+    public float VerticalVelocity => verticalVelocity;
     private GrapplingRope currentRope;
     private bool isOnGrapple;
     private bool justLaunched;       // flag para proteger el impulso
@@ -385,4 +385,27 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("Jump");
         }
     }
+
+
+    // ─────────────────────────────────────────────
+    //  Integración con Trampoline
+    // ─────────────────────────────────────────────
+
+    public void Bounce(float force)
+    {
+        // Cancelar cualquier swing activo
+        if (isOnGrapple && currentRope != null)
+            currentRope.ReleaseSwing();
+
+        verticalVelocity = force;
+        justLaunched = true;     // reutiliza el flag del grapple para proteger el impulso
+        launchTimer = 0.2f;
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Jump");
+            anim.SetTrigger("Jump");
+        }
+    }
+
 }
