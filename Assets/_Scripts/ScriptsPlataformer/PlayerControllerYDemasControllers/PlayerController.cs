@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public FlowerPot currentFlowerPot;
     [HideInInspector] public WaterSource currentWaterSource;
     [HideInInspector] public CharacterInNeed currentCharacterInNeed;
+    [HideInInspector] public UnlockableMechanic currentUnlockable;
 
     // ─────────────────────────────────────────────
     //  Componentes y variables internas
@@ -50,6 +51,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 movementVector;
     private float verticalVelocity;
     private bool isSprinting;
+    public float VerticalVelocity => verticalVelocity;
 
     private GrapplingRope currentRope;
     private bool isOnGrapple;
@@ -273,15 +275,22 @@ public class PlayerController : MonoBehaviour
         // Prioridad 1: cargar nivel
         if (currentLevelNode != null)
         {
-            Debug.Log("Cargando nivel: " + currentLevelNode.levelName);
             currentLevelNode.LoadLevel();
             return;
         }
 
-        // Prioridad 2: entregar kit a personaje en necesidad
+        // Prioridad 2: entregar kit
         if (currentCharacterInNeed != null)
         {
             currentCharacterInNeed.TryDeliverKit();
+            return;
+        }
+
+        // ✅ Prioridad 3: desbloquear mecánica
+        if (currentUnlockable != null)
+        {
+            currentUnlockable.TryUnlock();
+            return;
         }
     }
 
@@ -385,4 +394,27 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("Jump");
         }
     }
+
+
+    // ─────────────────────────────────────────────
+    //  Integración con Trampoline
+    // ─────────────────────────────────────────────
+
+    public void Bounce(float force)
+    {
+        // Cancelar cualquier swing activo
+        if (isOnGrapple && currentRope != null)
+            currentRope.ReleaseSwing();
+
+        verticalVelocity = force;
+        justLaunched = true;     // reutiliza el flag del grapple para proteger el impulso
+        launchTimer = 0.2f;
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Jump");
+            anim.SetTrigger("Jump");
+        }
+    }
+
 }
