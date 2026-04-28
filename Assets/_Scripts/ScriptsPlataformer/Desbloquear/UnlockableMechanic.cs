@@ -35,6 +35,14 @@ public class UnlockableMechanic : MonoBehaviour
     public float buildDuration = 2f;   // cuánto tarda en "construir"
     public float exitDuration = 1.5f; // cuánto tarda en irse
 
+    [Header("Audio")]
+    public AudioClip buildSound;
+    private AudioSource _audioSource;
+
+    [Header("VFX")]
+    public GameObject buildVFX;    // partícula en loop mientras construye
+    public GameObject completeVFX; // partícula que se reproduce al terminar
+
     // ─────────────────────────────────────────────
     //  Estado interno
     // ─────────────────────────────────────────────
@@ -48,6 +56,9 @@ public class UnlockableMechanic : MonoBehaviour
 
     void Start()
     {
+        _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+
         if (!isUnlockable)
         {
             if (signObject != null) signObject.SetActive(false);
@@ -67,6 +78,9 @@ public class UnlockableMechanic : MonoBehaviour
 
         if (signObject != null) signObject.SetActive(true);
         if (mechanicRoot != null) mechanicRoot.SetActive(false);
+        _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.volume = 0.3f; // ← ajusta este valor a tu gusto
     }
 
     // ─────────────────────────────────────────────
@@ -112,11 +126,22 @@ public class UnlockableMechanic : MonoBehaviour
     {
         _isBuilding = true;
 
-        // 1 — Limpiar referencia del jugador para que no quede "atascado"
         if (PlayerController.instance != null)
             PlayerController.instance.currentUnlockable = null;
 
-        // 2 — Spawnear constructor cerca de la mecánica
+        // ✅ Spawnear VFX de construcción en loop
+        GameObject buildEffect = null;
+        if (buildVFX != null)
+            buildEffect = Instantiate(buildVFX, transform.position, Quaternion.identity);
+
+        // Audio
+        if (buildSound != null)
+        {
+            _audioSource.clip = buildSound;
+            _audioSource.loop = true;
+            _audioSource.Play();
+        }
+
         GameObject builder = null;
         Animator builderAnim = null;
 
@@ -126,28 +151,42 @@ public class UnlockableMechanic : MonoBehaviour
             builder = Instantiate(builderPrefab, spawnPos, Quaternion.identity);
             builderAnim = builder.GetComponent<Animator>();
 
-            // Que mire hacia la mecánica
-            Vector3 dir = (transform.position - spawnPos);
+            Vector3 dir = transform.position - spawnPos;
             dir.y = 0f;
             if (dir != Vector3.zero)
                 builder.transform.rotation = Quaternion.LookRotation(dir);
 
-            // Trigger animación de construcción
             if (builderAnim != null)
                 builderAnim.SetTrigger("Build");
         }
 
-        // 3 — Esperar la duración de construcción
         yield return new WaitForSeconds(buildDuration);
 
-        // 4 — Activar mecánica y ocultar letrero
+        // ✅ Destruir VFX de construcción
+        if (buildEffect != null)
+            Destroy(buildEffect);
+
+        // ✅ Detener audio
+        _audioSource.Stop();
+
+        // ✅ Spawnear VFX de completado (se destruye solo cuando termina)
+        if (completeVFX != null)
+        {
+            GameObject completeEffect = Instantiate(completeVFX, transform.position, Quaternion.identity);
+
+            // Si el sistema de partículas tiene duración definida, se autodestruye
+            ParticleSystem ps = completeEffect.GetComponent<ParticleSystem>();
+            if (ps != null)
+                Destroy(completeEffect, ps.main.duration + ps.main.startLifetime.constantMax);
+            else
+                Destroy(completeEffect, 3f); // fallback por si no tiene ParticleSystem directo
+        }
+
         if (mechanicRoot != null) mechanicRoot.SetActive(true);
         if (signObject != null) signObject.SetActive(false);
 
         _isUnlocked = true;
-        Debug.Log($"[UnlockableMechanic] ¡{gameObject.name} desbloqueado!");
 
-        // 5 — Animación de salida del constructor
         if (builder != null)
         {
             if (builderAnim != null)

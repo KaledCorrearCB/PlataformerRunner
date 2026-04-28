@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 9119531777851810088}
   - component: {fileID: 9184271615767375778}
   - component: {fileID: 8589001650240212171}
+  - component: {fileID: 6632110384374087674}
   - component: {fileID: 5522515517770786055}
   m_Layer: 0
   m_Name: Trampolin_BasePrefabPlataform
@@ -184,6 +185,23 @@ MonoBehaviour:
   builderSpawnOffset: {x: 1.5, y: 0, z: 0}
   buildDuration: 2
   exitDuration: 2
+  buildSound: {fileID: 8300000, guid: 5223471aabb631b46af05c9e14f7eae4, type: 3}
+  buildVFX: {fileID: 6813416509558619124, guid: 3b7f2c753d435d647a80f1f047a113e3, type: 3}
+  completeVFX: {fileID: 0}
+--- !u!114 &6632110384374087674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2737313374097513648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ef802723f19ebe49a896747142bd9ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrampolinePlataform
+  bounceForce: 18
+  cooldown: 0.5
 --- !u!95 &5522515517770786055
 Animator:
   serializedVersion: 7
