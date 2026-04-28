@@ -6,6 +6,10 @@ public class Coin : MonoBehaviour
     public int value = 1;          // Cuánto suma esta moneda
     public float rotationSpeed = 100f; // Velocidad de giro visual
 
+    [Header("SFX")]
+    public AudioClip collectSound;
+    [Range(0f, 1f)] public float collectVolume = 0.7f;
+
     void Update()
     {
         // Movimiento visual: la moneda gira sobre su propio eje
@@ -26,7 +30,8 @@ public class Coin : MonoBehaviour
             {
                 Debug.LogWarning("Ojo: No hay un SessionManager en la escena. Asegúrate de tener el objeto _Systems con el script.");
             }
-
+            if (collectSound != null)
+                AudioSource.PlayClipAtPoint(collectSound, transform.position, collectVolume);
             // 3. Destruimos la moneda para que no se pueda recoger dos veces
             Destroy(gameObject);
         }

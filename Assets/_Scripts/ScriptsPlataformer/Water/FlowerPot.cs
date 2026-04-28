@@ -21,8 +21,23 @@ public class FlowerPot : MonoBehaviour
     private PlayerController playerController;
     private PlayerWater playerWater;
 
+    [Header("VFX Riego")]
+    public GameObject wateringVFX;
+    private GameObject _wateringEffect;
+
+    [Header("SFX Riego")]
+    public AudioClip wateringSound;
+    [Range(0f, 1f)] public float wateringVolume = 0.5f;
+    public float soundStartTime = 1.5f; // ← segundo exacto donde empieza el audio
+    private AudioSource _audioSource;
     void Start()
     {
+
+        _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.loop = true;
+        _audioSource.volume = wateringVolume;
+
         if (progressBar != null)
         {
             progressBar.maxValue = requiredWater;
@@ -80,6 +95,25 @@ public class FlowerPot : MonoBehaviour
         if (playerWater != null && currentWaterReceived < requiredWater)
         {
             isWatering = true;
+
+            playerWater.StartWateringStream(); // ✅
+
+            // ✅ VFX
+            if (wateringVFX != null && _wateringEffect == null)
+            {
+                _wateringEffect = Instantiate(wateringVFX, transform.position, Quaternion.identity);
+                _wateringEffect.transform.SetParent(transform);
+            }
+
+            // ✅ SFX desde segundo específico
+            if (wateringSound != null)
+            {
+                _audioSource.clip = wateringSound;
+                // ✅ Asegurar que el tiempo no supere la duración del clip
+                _audioSource.time = Mathf.Clamp(soundStartTime, 0f, wateringSound.length - 0.1f);
+                _audioSource.Play();
+            }
+
             Debug.Log("Comenzó a regar");
         }
     }
@@ -87,12 +121,32 @@ public class FlowerPot : MonoBehaviour
     public void StopWatering()
     {
         isWatering = false;
+
+        if (playerWater != null) playerWater.StopWateringStream();
+
+        // ✅ Detener VFX
+        if (_wateringEffect != null)
+        {
+            Destroy(_wateringEffect);
+            _wateringEffect = null;
+        }
+
+        // ✅ Detener SFX
+        _audioSource.Stop();
         Debug.Log("Dejó de regar");
     }
 
     void GrowTree()
     {
         isWatering = false;
+        if (playerWater != null) playerWater.StopWateringStream(); // ✅
+        // ✅ Limpiar VFX y SFX al crecer
+        if (_wateringEffect != null)
+        {
+            Destroy(_wateringEffect);
+            _wateringEffect = null;
+        }
+        _audioSource.Stop();
 
         // *** NUEVO: avisar al PlayerWater que deje de "regar" ***
         if (playerController == null)
