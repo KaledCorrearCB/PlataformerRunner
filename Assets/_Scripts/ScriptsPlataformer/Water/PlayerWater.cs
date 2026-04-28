@@ -22,9 +22,25 @@ public class PlayerWater : MonoBehaviour
     [Header("VFX Absorción")]
     public GameObject absorbVFX;
     private GameObject _absorbEffect;
+
+    [Header("SFX Absorción")]
+    public AudioClip absorbSound;
+    [Range(0f, 1f)] public float absorbVolume = 0.5f;
+    private AudioSource _audioSource;
+
+    [Header("VFX Chorro de Agua")]
+    public GameObject waterStreamVFX;
+    public Transform streamSpawnPoint; // punto de spawn, ej: la mano del personaje
+    private GameObject _streamEffect;
+
     void Start()
     {
         playerController = GetComponent<PlayerController>();
+
+        _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.loop = true; // loop mientras absorbe
+        _audioSource.volume = absorbVolume;
 
         // Configurar barra de agua
         if (waterBar != null)
@@ -77,7 +93,12 @@ public class PlayerWater : MonoBehaviour
         {
             isAbsorbingWater = true;
             currentWaterSource = waterSource;
-            Debug.Log("💧 Comenzó a absorber agua");
+        }
+
+        if (absorbSound != null)
+        {
+            _audioSource.clip = absorbSound;
+            _audioSource.Play();
         }
     }
 
@@ -91,7 +112,8 @@ public class PlayerWater : MonoBehaviour
 
         isAbsorbingWater = false;
         currentWaterSource = null;
-        Debug.Log("💧 Dejó de absorber agua");
+
+        _audioSource.Stop();
     }
 
     // Método para USAR agua (regar plantas)
@@ -124,4 +146,24 @@ public class PlayerWater : MonoBehaviour
             waterBar.value = currentWater;
         }
     }
+
+    public void StartWateringStream()
+    {
+        if (waterStreamVFX != null && _streamEffect == null)
+        {
+            Transform spawnPoint = streamSpawnPoint != null ? streamSpawnPoint : transform;
+            _streamEffect = Instantiate(waterStreamVFX, spawnPoint.position, spawnPoint.rotation);
+            _streamEffect.transform.SetParent(spawnPoint);
+        }
+    }
+
+    public void StopWateringStream()
+    {
+        if (_streamEffect != null)
+        {
+            Destroy(_streamEffect);
+            _streamEffect = null;
+        }
+    }
+
 }

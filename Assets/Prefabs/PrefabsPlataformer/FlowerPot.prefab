@@ -352,6 +352,10 @@ MonoBehaviour:
   canvas: {fileID: 37424887158520392}
   treePrefab: {fileID: 5067555841936562664, guid: d9f32275fb40e564a91b3245ff129951, type: 3}
   spawnPoint: {fileID: 645431686375849215}
+  wateringVFX: {fileID: 3381772053132140057, guid: 673dd86dc0590e84a976de2f8dc35a63, type: 3}
+  wateringSound: {fileID: 8300000, guid: 9cb144d5f82f10049aaf85685568cb13, type: 3}
+  wateringVolume: 0.386
+  soundStartTime: 4
 --- !u!1 &2044193998969881064
 GameObject:
   m_ObjectHideFlags: 0

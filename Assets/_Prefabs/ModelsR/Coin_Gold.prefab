@@ -69,6 +69,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Coin
   value: 1
   rotationSpeed: 100
+  collectSound: {fileID: 8300000, guid: 7c9dc897b477f14428ac059fe68cfd1c, type: 3}
+  collectVolume: 1
 --- !u!1001 &3530051283118069588
 PrefabInstance:
   m_ObjectHideFlags: 0
