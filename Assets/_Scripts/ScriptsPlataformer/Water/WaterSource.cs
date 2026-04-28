@@ -1,10 +1,10 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 
 public class WaterSource : MonoBehaviour
 {
-    [Header("ConfiguraciÛn")]
+    [Header("Configuraci√≥n")]
     public bool isInfinite = true;        // Si la fuente nunca se agota
-    public float waterAmount = 100f;      // Si es finita, cu·nta agua tiene
+    public float waterAmount = 100f;      // Si es finita, cu√°nta agua tiene
     public float absorptionMultiplier = 1f; // Velocidad extra (opcional)
 
     [Header("Visuales")]
@@ -19,8 +19,18 @@ public class WaterSource : MonoBehaviour
 
     private PlayerController playerInZone;
 
+    void Awake()
+    {
+        Debug.Log($"[WaterSource] ParticleSystem encontrado: {absorptionParticles}");
+
+        if (absorptionParticles == null)
+            absorptionParticles = GetComponentInChildren<ParticleSystem>();
+    }
+
     void Start()
     {
+
+
         if (interactCanvas != null)
             interactCanvas.SetActive(false);
 
@@ -31,26 +41,30 @@ public class WaterSource : MonoBehaviour
     // Llamado desde PlayerController cuando el jugador empieza a absorber
     public void StartAbsorbing(PlayerController player)
     {
-        if (!isInfinite && waterAmount <= 0)
-        {
-            Debug.Log("Esta fuente est· seca");
-            return;
-        }
+        if (!isInfinite && waterAmount <= 0) return;
 
-        Debug.Log("Comenzando a absorber de fuente de agua");
-
-        // AquÌ puedes activar efectos visuales
         if (absorptionParticles != null)
-            absorptionParticles.Play();
+        {
+            // üîç Revisar toda la cadena de padres
+            Transform t = absorptionParticles.transform;
+            while (t != null)
+            {
+                Debug.Log($"[WaterSource] Objeto: {t.name} | activeSelf={t.gameObject.activeSelf} | activeInHierarchy={t.gameObject.activeInHierarchy}");
+                t = t.parent;
+            }
+
+            absorptionParticles.gameObject.SetActive(true);
+            absorptionParticles.Play(true);
+        }
     }
 
     // Llamado desde PlayerController cuando el jugador deja de absorber
     public void StopAbsorbing(PlayerController player)
     {
-        Debug.Log("DejÛ de absorber agua");
+        Debug.Log("Dej√≥ de absorber agua");
 
         if (absorptionParticles != null)
-            absorptionParticles.Stop();
+            absorptionParticles.Stop(true); // ‚úÖ detiene hijos tambi√©n
     }
 
     private void OnTriggerEnter(Collider other)

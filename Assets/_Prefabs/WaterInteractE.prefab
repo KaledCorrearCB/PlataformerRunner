@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2937862586207261736, guid: 0615a522ca00b1f42803c35c0857f6d5, type: 3}
       propertyPath: m_Name
-      value: Water Variant
+      value: WaterInteractE
       objectReference: {fileID: 0}
     - target: {fileID: 4188070957868656416, guid: 0615a522ca00b1f42803c35c0857f6d5, type: 3}
       propertyPath: m_LocalScale.x
@@ -117,5 +117,5 @@ MonoBehaviour:
   waterAmount: 100
   absorptionMultiplier: 1
   waterVisual: {fileID: 9026884497722585426}
-  absorptionParticles: {fileID: 0}
+  absorptionParticles: {fileID: 5291275307717659108, guid: 5a8d99fb95262ea458a7b580f2a1611c, type: 3}
   interactCanvas: {fileID: 0}
