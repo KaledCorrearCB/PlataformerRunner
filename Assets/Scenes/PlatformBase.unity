@@ -175,6 +175,10 @@ PrefabInstance:
       propertyPath: completeVFX
       value: 
       objectReference: {fileID: 8771972552311404799, guid: bbf9e36a48d6c5648a13889afab076fd, type: 3}
+    - target: {fileID: 8589001650240212171, guid: 1bc07a5516712c14bbf052ca4b958d09, type: 3}
+      propertyPath: isUnlockable
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1755,10 +1759,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Trampolin_BasePrefabPlataform (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 6632110384374087674, guid: 1bc07a5516712c14bbf052ca4b958d09, type: 3}
+      propertyPath: bounceForce
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 8589001650240212171, guid: 1bc07a5516712c14bbf052ca4b958d09, type: 3}
       propertyPath: completeVFX
       value: 
       objectReference: {fileID: 8771972552311404799, guid: bbf9e36a48d6c5648a13889afab076fd, type: 3}
+    - target: {fileID: 8589001650240212171, guid: 1bc07a5516712c14bbf052ca4b958d09, type: 3}
+      propertyPath: isUnlockable
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4551,6 +4563,10 @@ PrefabInstance:
       propertyPath: waterVisual
       value: 
       objectReference: {fileID: 1234695090}
+    - target: {fileID: 4536828897203554973, guid: ffb3377b1a7bbdf49b1e939e2dab6da9, type: 3}
+      propertyPath: absorptionParticles
+      value: 
+      objectReference: {fileID: 8205706795460263316, guid: 326e86d5729c54e479798cacab220bb2, type: 3}
     - target: {fileID: 7682755051360703890, guid: ffb3377b1a7bbdf49b1e939e2dab6da9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 619.9409
@@ -5284,6 +5300,6 @@ SceneRoots:
   - {fileID: 281262367}
   - {fileID: 1462547952}
   - {fileID: 2131601492}
-  - {fileID: 102909644}
   - {fileID: 1053937230}
   - {fileID: 238823266}
+  - {fileID: 102909644}

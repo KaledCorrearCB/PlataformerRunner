@@ -67,6 +67,7 @@ MonoBehaviour:
   currentFlowerPot: {fileID: 0}
   currentWaterSource: {fileID: 0}
   currentCharacterInNeed: {fileID: 0}
+  currentUnlockable: {fileID: 0}
   coyoteTime: 0.2
 --- !u!143 &8389045184730695206
 CharacterController:
@@ -136,6 +137,7 @@ MonoBehaviour:
   waterSourceLayer:
     serializedVersion: 2
     m_Bits: 0
+  absorbVFX: {fileID: 3381772053132140057, guid: 673dd86dc0590e84a976de2f8dc35a63, type: 3}
 --- !u!114 &3076769571192683895
 MonoBehaviour:
   m_ObjectHideFlags: 0

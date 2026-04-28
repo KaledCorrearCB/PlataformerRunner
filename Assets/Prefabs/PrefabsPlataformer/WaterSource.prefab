@@ -161,5 +161,5 @@ MonoBehaviour:
   waterAmount: 100
   absorptionMultiplier: 1
   waterVisual: {fileID: 0}
-  absorptionParticles: {fileID: 0}
+  absorptionParticles: {fileID: 1172081452124834315, guid: ac009bb7498fcfb4b96614c4fd1f735c, type: 3}
   interactCanvas: {fileID: 0}

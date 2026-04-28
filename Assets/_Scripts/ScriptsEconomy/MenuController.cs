@@ -19,5 +19,12 @@ public class MenuController : MonoBehaviour
         SceneManager.LoadScene("RecordMenu");
     }
 
+    public void CloseGame()
+    {
+        Application.Quit();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
+    }
 
 }

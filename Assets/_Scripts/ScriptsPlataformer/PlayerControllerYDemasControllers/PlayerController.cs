@@ -92,7 +92,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        Debug.Log($"[PC Update] stopMoving={stopMoving} | enabled={this.enabled} | inputM={inputM}");
+      //  Debug.Log($"[PC Update] stopMoving={stopMoving} | enabled={this.enabled} | inputM={inputM}");
 
         if (stopMoving)
         {

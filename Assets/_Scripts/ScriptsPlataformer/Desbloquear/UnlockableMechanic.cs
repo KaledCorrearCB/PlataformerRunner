@@ -56,11 +56,14 @@ public class UnlockableMechanic : MonoBehaviour
 
     void Start()
     {
+
+
         _audioSource = gameObject.AddComponent<AudioSource>();
         _audioSource.playOnAwake = false;
 
         if (!isUnlockable)
         {
+            _isUnlocked = true;
             if (signObject != null) signObject.SetActive(false);
             if (mechanicRoot != null) mechanicRoot.SetActive(true);
             return;
