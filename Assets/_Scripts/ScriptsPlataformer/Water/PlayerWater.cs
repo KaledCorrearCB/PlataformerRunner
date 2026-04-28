@@ -19,6 +19,9 @@ public class PlayerWater : MonoBehaviour
     private GameObject currentWaterSource;
     private PlayerController playerController;
 
+    [Header("VFX Absorción")]
+    public GameObject absorbVFX;
+    private GameObject _absorbEffect;
     void Start()
     {
         playerController = GetComponent<PlayerController>();
@@ -64,6 +67,12 @@ public class PlayerWater : MonoBehaviour
 
     public void StartAbsorbingWater(GameObject waterSource)
     {
+        if (absorbVFX != null)
+        {
+            _absorbEffect = Instantiate(absorbVFX, transform.position, Quaternion.identity);
+            _absorbEffect.transform.SetParent(transform); // sigue al jugador
+        }
+
         if (currentWater < maxWater)
         {
             isAbsorbingWater = true;
@@ -74,6 +83,12 @@ public class PlayerWater : MonoBehaviour
 
     public void StopAbsorbingWater()
     {
+        if (_absorbEffect != null)
+        {
+            Destroy(_absorbEffect);
+            _absorbEffect = null;
+        }
+
         isAbsorbingWater = false;
         currentWaterSource = null;
         Debug.Log("💧 Dejó de absorber agua");

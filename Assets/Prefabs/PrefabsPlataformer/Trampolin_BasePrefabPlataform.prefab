@@ -187,7 +187,7 @@ MonoBehaviour:
   exitDuration: 2
   buildSound: {fileID: 8300000, guid: 5223471aabb631b46af05c9e14f7eae4, type: 3}
   buildVFX: {fileID: 6813416509558619124, guid: 3b7f2c753d435d647a80f1f047a113e3, type: 3}
-  completeVFX: {fileID: 0}
+  completeVFX: {fileID: 8771972552311404799, guid: bbf9e36a48d6c5648a13889afab076fd, type: 3}
 --- !u!114 &6632110384374087674
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,8 +200,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ef802723f19ebe49a896747142bd9ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrampolinePlataform
-  bounceForce: 18
+  bounceForce: 12
   cooldown: 0.5
+  bounceSound: {fileID: 8300000, guid: 9580604c7603418408ad7bda319736b4, type: 3}
+  bounceVolume: 0.5
+  bounceVFX: {fileID: 985483039366664255, guid: f91edac4d13fc4343ba96bb6a843ad05, type: 3}
 --- !u!95 &5522515517770786055
 Animator:
   serializedVersion: 7
