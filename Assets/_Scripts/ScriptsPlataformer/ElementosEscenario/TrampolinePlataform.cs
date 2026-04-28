@@ -9,11 +9,23 @@ public class TrampolinePlataform : MonoBehaviour
     private TrampolineAnimation trampolineAnim;
     private float lastBounceTime = -999f;
     private UnlockableMechanic _unlockable;
+
+    [Header("Audio")]
+    public AudioClip bounceSound;
+    [Range(0f, 1f)] public float bounceVolume = 0.5f;
+    private AudioSource _audioSource;
+
+    [Header("VFX")]
+    public GameObject bounceVFX;
+
     void Awake()
     {
         trampolineAnim = GetComponent<TrampolineAnimation>();
-        // Busca en el padre por si el collider está en el root
         _unlockable = GetComponentInParent<UnlockableMechanic>();
+
+        _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.volume = bounceVolume;
     }
 
     // ── Detección ─────────────────────────────────────────────────────────────
@@ -44,5 +56,20 @@ public class TrampolinePlataform : MonoBehaviour
         lastBounceTime = Time.time;
         player.Bounce(bounceForce);
         trampolineAnim.DispararAnimacion();
+
+        // ✅ SFX
+        if (bounceSound != null)
+            _audioSource.PlayOneShot(bounceSound, bounceVolume);
+
+        // ✅ VFX — se destruye solo cuando termina
+        if (bounceVFX != null)
+        {
+            GameObject effect = Instantiate(bounceVFX, transform.position, Quaternion.identity);
+            ParticleSystem ps = effect.GetComponent<ParticleSystem>();
+            if (ps != null)
+                Destroy(effect, ps.main.duration + ps.main.startLifetime.constantMax);
+            else
+                Destroy(effect, 2f);
+        }
     }
 }

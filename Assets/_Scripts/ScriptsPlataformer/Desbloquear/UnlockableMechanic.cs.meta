@@ -1,2 +1,17 @@
 fileFormatVersion: 2
 guid: 0a0366e8cc6b8b145bc4898141a182bc
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - signObject: {instanceID: 0}
+  - mechanicRoot: {instanceID: 0}
+  - builderPrefab: {instanceID: 0}
+  - buildSound: {fileID: 8300000, guid: 5223471aabb631b46af05c9e14f7eae4, type: 3}
+  - buildVFX: {fileID: 6813416509558619124, guid: 3b7f2c753d435d647a80f1f047a113e3, type: 3}
+  - completeVFX: {fileID: 8771972552311404799, guid: bbf9e36a48d6c5648a13889afab076fd, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
