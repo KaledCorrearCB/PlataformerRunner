@@ -162,7 +162,6 @@ public class CharacterInNeed : MonoBehaviour
         {
             foreach (Material mat in rend.materials)
             {
-                // Activa el modo transparente
                 mat.SetFloat("_Mode", 3);
                 mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
                 mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
@@ -172,10 +171,19 @@ public class CharacterInNeed : MonoBehaviour
                 mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                 mat.renderQueue = 3000;
 
-                // Ajusta la opacidad (0 = invisible, 1 = sólido)
-                Color c = mat.color;
-                c.a = 0.1f; // ← cambia este valor a tu gusto
-                mat.color = c;
+                // ✅ Solo modificar el color si el shader lo soporta
+                if (mat.HasProperty("_Color"))
+                {
+                    Color c = mat.color;
+                    c.a = 0.1f;
+                    mat.color = c;
+                }
+                else if (mat.HasProperty("_BaseColor")) // ✅ URP usa _BaseColor
+                {
+                    Color c = mat.GetColor("_BaseColor");
+                    c.a = 0.1f;
+                    mat.SetColor("_BaseColor", c);
+                }
             }
         }
     }
