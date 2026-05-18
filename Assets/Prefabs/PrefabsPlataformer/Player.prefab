@@ -56,7 +56,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   playerWater: {fileID: 7244426206401741673}
-  anim: {fileID: 684033984675367430}
+  anim: {fileID: 6383533463953432502}
   moveSpeed: 6
   sprintMultiplier: 1.6
   rotationSpeed: 10
@@ -425,6 +425,11 @@ PrefabInstance:
 --- !u!4 &1042285387822564812 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 22b1493147d397841829be3cf6baa983, type: 3}
+  m_PrefabInstance: {fileID: 719529706898317863}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6383533463953432502 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 22b1493147d397841829be3cf6baa983, type: 3}
   m_PrefabInstance: {fileID: 719529706898317863}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2772388801288903156
