@@ -47,8 +47,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterInNeed
   requiredKit: 1
   characterName: Calle
-  _animator: {fileID: 0}
-  kitPrefab: {fileID: 0}
+  _animator: {fileID: 4800891637915433381}
+  kitPrefab: {fileID: 3870305930497981350, guid: 1b7ff508760ab1843b99768a004f411c, type: 3}
   floatHeight: 2
   rotationSpeed: 90
 --- !u!1001 &1426132740110484532
@@ -190,9 +190,9 @@ MonoBehaviour:
   requiredKit: 1
   characterName: Hambre
   _animator: {fileID: 4800891637915433381}
-  kitPrefab: {fileID: 3870305930497981350, guid: 1b7ff508760ab1843b99768a004f411c, type: 3}
-  floatHeight: 2.2
-  rotationSpeed: 60
+  kitPrefab: {fileID: 0}
+  floatHeight: 2
+  rotationSpeed: 90
 --- !u!95 &4800891637915433381 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 87edcfd5d23f35946a279054f668000f, type: 3}
