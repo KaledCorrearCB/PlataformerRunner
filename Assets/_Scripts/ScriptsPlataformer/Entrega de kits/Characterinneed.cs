@@ -175,13 +175,13 @@ public class CharacterInNeed : MonoBehaviour
                 if (mat.HasProperty("_Color"))
                 {
                     Color c = mat.color;
-                    c.a = 0.1f;
+                    c.a = 0.8f;
                     mat.color = c;
                 }
                 else if (mat.HasProperty("_BaseColor")) // ✅ URP usa _BaseColor
                 {
                     Color c = mat.GetColor("_BaseColor");
-                    c.a = 0.1f;
+                    c.a = 0.8f;
                     mat.SetColor("_BaseColor", c);
                 }
             }
