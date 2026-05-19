@@ -6,8 +6,7 @@ public class UnlockableMechanic : MonoBehaviour
     // ─────────────────────────────────────────────
     //  Inspector
     // ─────────────────────────────────────────────
-    [Header("UI del letrero")]
-    public Sprite signIcon; // arrastra el icono desde el Inspector
+
     [Header("¿Es desbloqueable?")]
     public bool isUnlockable = true;
     public bool IsUnlocked => _isUnlocked;
