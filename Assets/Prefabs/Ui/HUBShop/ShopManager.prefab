@@ -228,6 +228,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
   availableItems:
   - {fileID: 11400000, guid: ae8a2b320768ca64ab0573d3ed102805, type: 2}
+  - {fileID: 11400000, guid: 779c9fdefe6d75840b7386dfd0d8e4b9, type: 2}
+  - {fileID: 11400000, guid: b6c8ad4701e7ea946b08f0007bc4fdae, type: 2}
   shopPanel: {fileID: 7871796280526078507}
   shopUI: {fileID: 9034235744541426766}
   impactNotification: {fileID: 7601898889869133257}
@@ -1068,7 +1070,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.11770835, y: 0.21481483}
   m_AnchorMax: {x: 0.84954137, y: 0.823}
-  m_AnchoredPosition: {x: 31.5, y: -20.5}
+  m_AnchoredPosition: {x: -11, y: -20.5}
   m_SizeDelta: {x: 515, y: 423}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7902074204769805266
@@ -1091,7 +1093,7 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 500, y: 580}
-  m_Spacing: {x: 0, y: 0}
+  m_CellSize: {x: 600, y: 600}
+  m_Spacing: {x: 1, y: 1}
   m_Constraint: 1
-  m_ConstraintCount: 2
+  m_ConstraintCount: 3

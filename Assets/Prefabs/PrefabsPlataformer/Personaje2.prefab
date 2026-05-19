@@ -190,7 +190,7 @@ MonoBehaviour:
   requiredKit: 1
   characterName: Hambre
   _animator: {fileID: 4800891637915433381}
-  kitPrefab: {fileID: 0}
+  kitPrefab: {fileID: 3870305930497981350, guid: 1b7ff508760ab1843b99768a004f411c, type: 3}
   floatHeight: 2
   rotationSpeed: 90
 --- !u!95 &4800891637915433381 stripped
