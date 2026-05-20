@@ -4,10 +4,8 @@ using TMPro;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
-
 public class RunnerController : MonoBehaviour
 {
-
     [Header("Movimiento y Progresión")]
     public float initialSpeed = 12f;
     public float maxSpeed = 30f;
@@ -88,73 +86,47 @@ public class RunnerController : MonoBehaviour
     public Animator animator;
 
     private float trampolineTimer = 0f;
-
     private Vector3 cameraOriginalPosition;
-
     private Quaternion cameraOriginalRotation;
-
     private Quaternion originalRotation;
-
     private bool isJetpacking = false;
     private float jetpackTimer = 0f;
     private float targetJetpackY;
-
     private CharacterController controller;
-
     private int currentLane = 0;
-
     private Vector3 currentForward = Vector3.forward;
     private Vector3 currentRight = Vector3.right;
-
     private Vector3 pivotPoint;
-
     private Quaternion targetRotation;
-
     private bool isRotating = false;
-
     private bool isInTurnTrigger = false;
-
     private bool canTurn = false;
-
     private bool isInTurnZone = false;
-
     private float turnInputTimer = 0f;
-    private float turnInputBufferTime = 0.3f; // tiempo para recordar input
+    private float turnInputBufferTime = 0.3f;
     private int bufferedTurn = 0;
-
     private Transform turnCenterPoint;
-
-    private bool isSnappingToCenter = false;
-
     private Quaternion visualOriginalRotation;
     public Transform visualModel;
-
     private bool isSliding = false;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
-
         targetRotation = transform.rotation;
-
         currentForwardSpeed = initialSpeed;
-
         lastPosition = transform.position;
-
         pivotPoint = transform.position;
 
         originalHeight = controller.height;
         originalCenter = controller.center;
-
         controller.stepOffset = 0.1f;
 
         if (ambulanceModel != null) ambulanceModel.SetActive(false);
         if (waterSplashVFX != null) waterSplashVFX.SetActive(false);
 
         originalRotation = transform.localRotation;
-
         cameraOriginalPosition = playerCamera.localPosition;
-
         visualOriginalRotation = visualModel.localRotation;
     }
 
@@ -184,7 +156,6 @@ public class RunnerController : MonoBehaviour
             Die();
 
         UpdateAnimations();
-
     }
 
     public void OnMoveInput(InputAction.CallbackContext context)
@@ -264,7 +235,6 @@ public class RunnerController : MonoBehaviour
 
     void MovePlayer()
     {
-
         float jetpackY = 0f;
 
         if (isJetpacking)
@@ -278,7 +248,6 @@ public class RunnerController : MonoBehaviour
             );
 
             jetpackY = newY - transform.position.y;
-
             verticalVelocity = 0f;
 
             if (jetpackTimer <= 0)
@@ -290,45 +259,16 @@ public class RunnerController : MonoBehaviour
             }
         }
 
-        if (isSnappingToCenter && turnCenterPoint != null)
-        {
-            Vector3 targetPos = new Vector3(
-                turnCenterPoint.position.x,
-                transform.position.y,
-                turnCenterPoint.position.z
-            );
-
-            Vector3 moveToCenter = targetPos - transform.position;
-
-            controller.Move(moveToCenter);
-
-            if (moveToCenter.magnitude < 0.05f)
-            {
-                transform.position = targetPos;
-
-                pivotPoint = transform.position;
-                currentLane = 0;
-
-                currentForward = transform.forward;
-                currentRight = transform.right;
-
-                isSnappingToCenter = false;
-            }
-        }
-
         Vector3 offsetFromPivot = transform.position - pivotPoint;
-
         float currentLateralPos = Vector3.Dot(offsetFromPivot, currentRight);
-
         float targetLateralPos = currentLane * laneDistance;
-
         float lateralDelta = targetLateralPos - currentLateralPos;
-
         Vector3 lateralMoveVector = Vector3.zero;
 
         bool isSliding = controller.height < originalHeight;
 
-        if (!isSnappingToCenter && !isSliding)
+        // Utilizamos la transición suave lateral para acomodar al jugador
+        if (!isSliding)
         {
             lateralMoveVector = currentRight * (lateralDelta * laneChangeSpeed);
         }
@@ -341,7 +281,6 @@ public class RunnerController : MonoBehaviour
         if (isSlidingOnWater)
             actualSpeed *= slideSpeedMultiplier;
 
-        // BOOST DEL TRAMPOLÍN
         if (trampolineTimer > 0)
         {
             trampolineTimer -= Time.deltaTime;
@@ -368,19 +307,13 @@ public class RunnerController : MonoBehaviour
             if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f)
             {
                 transform.rotation = targetRotation;
-
-                currentForward = transform.forward;
-                currentRight = transform.right;
-
                 isRotating = false;
             }
         }
 
-        // ROTACIÓN DEL PERSONAJE PARA JETPACK
         if (isJetpacking)
         {
             Vector3 currentEuler = transform.eulerAngles;
-
             Quaternion jetpackRot = Quaternion.Euler(90f, currentEuler.y, 0f);
 
             transform.rotation = Quaternion.Lerp(
@@ -392,7 +325,6 @@ public class RunnerController : MonoBehaviour
         else
         {
             Vector3 currentEuler = transform.eulerAngles;
-
             Quaternion normalRot = Quaternion.Euler(0f, currentEuler.y, 0f);
 
             transform.rotation = Quaternion.Lerp(
@@ -402,7 +334,6 @@ public class RunnerController : MonoBehaviour
             );
         }
 
-        // CÁMARA (POSICIÓN + ROTACIÓN)
         Vector3 targetPos1;
         Vector3 targetRotEuler;
 
@@ -417,14 +348,12 @@ public class RunnerController : MonoBehaviour
             targetRotEuler = cameraNormalRotation;
         }
 
-        // POSICIÓN
         playerCamera.localPosition = Vector3.Lerp(
             playerCamera.localPosition,
             targetPos1,
             cameraMoveSpeed * Time.deltaTime
         );
 
-        // ROTACIÓN
         Quaternion targetRot = Quaternion.Euler(targetRotEuler);
 
         playerCamera.localRotation = Quaternion.Lerp(
@@ -450,13 +379,18 @@ public class RunnerController : MonoBehaviour
 
         if (turnCenterPoint != null)
         {
-            isSnappingToCenter = true;
+            // Actualizamos el pivote a la nueva pista inmediatamente.
+            // Esto le permite al sistema de carriles ajustarlo suavemente sin pelear contra la física.
+            pivotPoint = new Vector3(turnCenterPoint.position.x, transform.position.y, turnCenterPoint.position.z);
         }
 
         targetRotation *= Quaternion.Euler(0, angle, 0);
 
         isRotating = true;
         isInTurnZone = false;
+
+        currentForward = targetRotation * Vector3.forward;
+        currentRight = targetRotation * Vector3.right;
     }
 
     void HandleAbilityTimer()
@@ -534,9 +468,7 @@ public class RunnerController : MonoBehaviour
     void StartSlide()
     {
         controller.height = slideHeight;
-
         float centerOffset = (originalHeight - slideHeight) / 2f;
-
         controller.center = originalCenter - new Vector3(0, centerOffset, 0);
     }
 
@@ -550,7 +482,6 @@ public class RunnerController : MonoBehaviour
     {
         if (hit.gameObject.CompareTag("Obstacle"))
         {
-
             if (Vector3.Dot(hit.normal, currentForward) < -0.6f)
             {
                 if (isAmbulanceMode)
@@ -616,10 +547,8 @@ public class RunnerController : MonoBehaviour
 
         if (other.CompareTag("Trampoline"))
         {
-            // 1. Ejecuta el salto (código original)
             ActivateTrampoline();
 
-            // 2. Ejecuta la animación buscando el script en el trampolín (NUEVO)
             TrampolineAnimation anim = other.GetComponent<TrampolineAnimation>();
             if (anim != null)
             {
@@ -653,8 +582,6 @@ public class RunnerController : MonoBehaviour
         animator.SetBool("isJetpacking", isJetpacking);
 
         animator.SetFloat("verticalVelocity", verticalVelocity);
-
-        // Siempre está corriendo
         animator.SetBool("isRunning", true);
 
         if (isSliding)
@@ -666,8 +593,6 @@ public class RunnerController : MonoBehaviour
             visualModel.localRotation = visualOriginalRotation;
         }
     }
-
-    //-------- JETPACK --------//
 
     void ActivateJetpack()
     {
@@ -682,14 +607,9 @@ public class RunnerController : MonoBehaviour
             jetpackModel.SetActive(true);
     }
 
-    //-------- TRAMPOLINE --------//
-
     void ActivateTrampoline()
     {
-        // Impulso vertical fuerte
         verticalVelocity = trampolineJumpForce;
-
-        // Activar boost hacia adelante
         trampolineTimer = trampolineBoostDuration;
     }
 }
