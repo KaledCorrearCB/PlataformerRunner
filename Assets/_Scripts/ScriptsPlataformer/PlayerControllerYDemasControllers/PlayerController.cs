@@ -203,16 +203,10 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateAnimations()
     {
-        if (anim == null)
-        {
-            Debug.LogError("[ANIM] anim es NULL — referencia rota en build!");
-            return;
-        }
+        if (anim == null) return;
 
-        float speed = inputM.magnitude;
-        Debug.Log($"[ANIM] Speed={speed:F3} | isGrounded={charCon.isGrounded}");
-
-        anim.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
+        // Damping de 0.1 s para transiciones suaves (igual que el código viejo)
+        anim.SetFloat("Speed", inputM.magnitude, 0.1f, Time.deltaTime);
         anim.SetBool("IsGrounded", charCon.isGrounded);
     }
 
