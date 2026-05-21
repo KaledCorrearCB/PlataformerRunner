@@ -9,6 +9,8 @@ public class UnlockableMechanic : MonoBehaviour
 
     [Header("¿Es desbloqueable?")]
     public bool isUnlockable = true;
+    [Header("UI del letrero")]
+    public Sprite signIcon; // arrastra el icono desde el Inspector
     public bool IsUnlocked => _isUnlocked;
     [Header("Requisito de desbloqueo")]
     [Tooltip("Total de personas ayudadas necesarias")]

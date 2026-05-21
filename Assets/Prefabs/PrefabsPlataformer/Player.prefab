@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 3046454120394312976}
   - component: {fileID: 7244426206401741673}
   - component: {fileID: 3076769571192683895}
-  - component: {fileID: 684033984675367430}
   - component: {fileID: 1471729315024267233}
   m_Layer: 0
   m_Name: Player
@@ -162,28 +161,6 @@ MonoBehaviour:
   detectSound: {fileID: 8300000, guid: 53dd338ca94bf36409899a1bfe93afbc, type: 3}
   soundVolume: 1
   cooldown: 3
---- !u!95 &684033984675367430
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4824565705795560864}
-  m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 22b1493147d397841829be3cf6baa983, type: 3}
-  m_Controller: {fileID: 9100000, guid: bc38e3de1e555fc4287c3f5179c48a6e, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &1471729315024267233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -571,7 +548,7 @@ PrefabInstance:
     - target: {fileID: 2450189967356132175, guid: f4c723a647ec10b4cb9e1c93b012f132, type: 3}
       propertyPath: playerAnimator
       value: 
-      objectReference: {fileID: 684033984675367430}
+      objectReference: {fileID: 6383533463953432502}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

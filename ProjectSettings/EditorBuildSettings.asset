@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/LevelSelector.unity
     guid: 60df008fb57c1434f9f4190a25340b19
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/RunnerBaseViejo.unity
     guid: 931d051fb99da58438f8841560198254
   - enabled: 1
@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/RecordMenu.unity
     guid: 41f71cf3e092c924597e65fd2d559bea
+  - enabled: 1
+    path: Assets/Scenes/RunnerBase.unity
+    guid: 8d483225b276bb5429060c091154e84c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
