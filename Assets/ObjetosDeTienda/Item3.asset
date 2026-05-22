@@ -19,4 +19,4 @@ MonoBehaviour:
   unlockMessage: 
   impactMessage: "Con las donaciones totales logradas por ti y el resto de la comunidad
     se salvaron m\xE1s de 120 familias. \U0001F49A"
-  impactMessageDelay: 60
+  impactMessageDelay: 10
